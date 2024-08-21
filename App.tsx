@@ -2,7 +2,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import './gesture-handler';
 import React from 'react';
 import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
-import AuthHomeScreen from './src/screens/AuthHomeScreen';
+import AuthHomeScreen from './src/screens/OnboardingScreen';
 import AuthStackNavigator from './src/navigation/AuthStackNavigator';
 
 function App(): React.JSX.Element {
