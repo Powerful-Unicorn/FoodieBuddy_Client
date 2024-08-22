@@ -18,6 +18,10 @@ function AuthHomeScreen({navigation}: OnboardingScreenProps) {
           title="로그인 화면으로 이동하자~~"
           onPress={() => navigation.navigate(authNavigations.LOGIN)}
         />
+        <Button
+          title="회원가입 화면으로 이동하자~~"
+          onPress={() => navigation.navigate(authNavigations.SIGNUP)}
+        />
       </View>
     </SafeAreaView>
   );
