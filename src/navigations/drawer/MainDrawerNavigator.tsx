@@ -1,7 +1,7 @@
 import {createDrawerNavigator} from '@react-navigation/drawer';
-import ChatScreen from '../../screens/ChatScreen';
-import SettingsScreen from '../../screens/SettingsScreen';
-import BookmarksScreen from '../../screens/BookmarksScreen';
+import ChatScreen from '../../screens/chat/ChatScreen';
+import SettingsScreen from '../../screens/settings/SettingsScreen';
+import BookmarksScreen from '../../screens/bookmarks/BookmarksScreen';
 
 const Drawer = createDrawerNavigator();
 
