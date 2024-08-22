@@ -1,23 +1,15 @@
 import {NavigationContainer} from '@react-navigation/native';
 import './gesture-handler';
 import React from 'react';
-import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
-import AuthHomeScreen from './src/screens/OnboardingScreen';
-import AuthStackNavigator from './src/navigation/AuthStackNavigator';
+
+import RootNavigator from './src/navigations/root/RootNavigator';
 
 function App(): React.JSX.Element {
   return (
     <NavigationContainer>
-      <AuthStackNavigator />
+      <RootNavigator />
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'red',
-    margin: '10%',
-  },
-});
 
 export default App;

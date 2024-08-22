@@ -10,9 +10,9 @@ export type AuthStackParamList = {
   [authNavigations.LOGIN]: undefined;
 };
 
-function AuthStackNavigator() {
-  const Stack = createStackNavigator<AuthStackParamList>();
+const Stack = createStackNavigator<AuthStackParamList>();
 
+function AuthStackNavigator() {
   return (
     <Stack.Navigator>
       <Stack.Screen
