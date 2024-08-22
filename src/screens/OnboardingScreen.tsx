@@ -1,7 +1,7 @@
 import React from 'react';
 import {StyleSheet, View, Button} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {AuthStackParamList} from '../navigations/AuthStackNavigator';
+import {AuthStackParamList} from '../navigations/stack/AuthStackNavigator';
 import {StackScreenProps} from '@react-navigation/stack';
 import {authNavigations} from '../constants';
 

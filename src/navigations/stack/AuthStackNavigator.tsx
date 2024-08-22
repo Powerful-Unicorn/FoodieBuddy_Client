@@ -1,9 +1,9 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import React from 'react';
 import {StyleSheet} from 'react-native';
-import OnboardingScreen from '../screens/OnboardingScreen';
-import LoginScreen from '../screens/LoginScreen';
-import {authNavigations} from '../constants';
+import OnboardingScreen from '../../screens/OnboardingScreen';
+import LoginScreen from '../../screens/LoginScreen';
+import {authNavigations} from '../../constants';
 
 export type AuthStackParamList = {
   [authNavigations.ONBOARDING]: undefined;
