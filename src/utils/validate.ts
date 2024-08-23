@@ -3,7 +3,7 @@ type UserInformation = {
   password: string;
 };
 
-function validateLogin(values: UserInformation) {
+function validateUser(values: UserInformation) {
   const errors = {
     email: '',
     password: '',
@@ -17,5 +17,16 @@ function validateLogin(values: UserInformation) {
   }
   return errors;
 }
+function validateLogin(values: UserInformation) {
+  return validateUser(values);
+}
+function validateSignup(values: UserInformation & {passwordConfirm: string}) {
+  const errors = validateUser(values);
+  const signupErrors = {...errors, passwordConfirm: ''};
+  if (values.password !== values.passwordConfirm) {
+    signupErrors.passwordConfirm = 'Passwords do not match';
+  }
+  return signupErrors;
+}
 
-export {validateLogin};
+export {validateLogin, validateSignup};
