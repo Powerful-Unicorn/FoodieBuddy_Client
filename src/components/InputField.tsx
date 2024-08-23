@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderWidth: 1,
-    borderColor: colors.RED_300,
+    borderColor: colors.RED_500,
   },
   error: {
     color: colors.RED_500,
