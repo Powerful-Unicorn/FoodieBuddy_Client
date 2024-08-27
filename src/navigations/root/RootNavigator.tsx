@@ -3,7 +3,7 @@ import MainDrawerNavigator from '../drawer/MainDrawerNavigator';
 import {View} from 'react-native';
 
 function RootNavigator() {
-  const isLoggedIn = false;
+  const isLoggedIn = false; //여기
 
   return <>{isLoggedIn ? <MainDrawerNavigator /> : <AuthStackNavigator />}</>;
 }
