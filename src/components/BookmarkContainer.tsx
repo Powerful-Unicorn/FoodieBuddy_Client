@@ -7,6 +7,7 @@ interface BookmarkContainerProps {
   title: string;
   subtitle: string;
   initialRating?: number;
+  onDelete: () => void;
 }
 
 const BookmarkContainer: React.FC<BookmarkContainerProps> = ({
@@ -47,11 +48,6 @@ const BookmarkContainer: React.FC<BookmarkContainerProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    margin: 30,
-    paddingHorizontal: 20,
-  },
   bookmarkContainer: {
     backgroundColor: colors.YELLOW_200,
     padding: 16,
@@ -60,7 +56,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // This pushes the ratingContainer to the right
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   textContainer: {
@@ -80,7 +76,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   starButton: {
-    marginHorizontal: 1, //별 사이 간격
+    marginHorizontal: 1, // Space between stars
   },
 });
 
