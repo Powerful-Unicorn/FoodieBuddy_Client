@@ -4,7 +4,7 @@ import {StyleSheet, Text, View} from 'react-native';
 function SettingsScreen() {
   return (
     <View>
-      <Text>세팅</Text>
+      <Text>세팅화면</Text>
     </View>
   );
 }
