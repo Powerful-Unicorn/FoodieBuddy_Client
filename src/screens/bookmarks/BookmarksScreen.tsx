@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
 import {StyleSheet, SafeAreaView, View, Text, Alert} from 'react-native';
 import {SwipeListView} from 'react-native-swipe-list-view';
-import BookmarkContainer from '@/components/BookmarkContainer';
+import BookmarkContainer from '../../components/BookmarkContainer';
 import {RectButton} from 'react-native-gesture-handler';
+import {colors} from '../../constants';
 
 // Define the type for a bookmark item
 interface Bookmark {
