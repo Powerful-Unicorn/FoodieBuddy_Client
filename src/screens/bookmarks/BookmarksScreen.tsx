@@ -64,21 +64,28 @@ const BookmarksScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <SwipeListView
-        data={bookmarks}
-        renderItem={renderItem}
-        renderHiddenItem={renderHiddenItem}
-        rightOpenValue={-75} // Adjust the swipe distance as needed
-        keyExtractor={item => item.id}
-      />
-    </SafeAreaView>
+    <View style={styles.wrapper}>
+      <SafeAreaView style={styles.container}>
+        <SwipeListView
+          data={bookmarks}
+          renderItem={renderItem}
+          renderHiddenItem={renderHiddenItem}
+          rightOpenValue={-75} // Adjust the swipe distance as needed
+          keyExtractor={item => item.id}
+        />
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: colors.WHITE, // 전체 배경색을 설정
+  },
   container: {
     flex: 1,
+    //backgroundColor: colors.WHITE,
     margin: 30,
   },
   rowBack: {
