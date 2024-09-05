@@ -5,14 +5,13 @@ import {StackScreenProps} from '@react-navigation/stack';
 import {DRStackParamList} from '../../navigations/stack/DRStackNavigatior';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-type DRFirstScreenProps = StackScreenProps<
+type DRSecondScreenProps = StackScreenProps<
   DRStackParamList,
-  typeof drNavigations.DRFIRST
+  typeof drNavigations.DRSECOND
 >;
 
-function DRFirstScreen({navigation}: DRFirstScreenProps) {
+function DRSecondScreen({navigation}: DRSecondScreenProps) {
   const [dr, setDR] = useState<string | null>(null);
-
   const handleVeganSelection = () => {
     setDR('Vegan');
   };
@@ -23,9 +22,7 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
 
   return (
     <View style={styles.container}>
-      <Text>Dietary Restriction:</Text>
-      <Button title="Vegan" onPress={handleVeganSelection} />
-      {/* Other dietary options */}
+      <Button title="Meat" onPress={handleVeganSelection} />
 
       <View style={styles.navigationContainer}>
         <TouchableOpacity
@@ -33,7 +30,7 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
           onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
         </TouchableOpacity>
-        <Text style={styles.pageNumber}>1</Text>
+        <Text style={styles.pageNumber}>2</Text>
         <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
           <Ionicons name="chevron-forward" size={24} color={colors.GRAY_700} />
         </TouchableOpacity>
@@ -68,4 +65,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DRFirstScreen;
+export default DRSecondScreen;

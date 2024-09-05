@@ -6,8 +6,8 @@ import DRFirstScreen from '../../screens/dr/DRFirstScreen';
 import DRSecondScreen from '../../screens/dr/DRSecondScreen';
 
 export type DRStackParamList = {
-  [drNavigations.DRFIRST]: undefined;
-  [drNavigations.DRSECOND]: undefined;
+  [drNavigations.DRFIRST]: {selectedDR?: string | null}; // Mark selectedDR as optional
+  [drNavigations.DRSECOND]: {selectedDR?: string | null}; // Mark selectedDR as optional
 };
 
 const Stack = createStackNavigator<DRStackParamList>();
@@ -27,7 +27,10 @@ function DRStackNavigator() {
       <Stack.Screen
         name={drNavigations.DRSECOND}
         component={DRSecondScreen}
-        options={{title: 'Dietary Restriction Setting'}}
+        options={{
+          title: 'Dietary Restriction Setting',
+          headerLeft: () => null, // Back 버튼 제거
+        }}
       />
     </Stack.Navigator>
   );
