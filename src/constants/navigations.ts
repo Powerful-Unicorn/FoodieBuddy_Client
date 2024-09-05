@@ -10,4 +10,9 @@ const authNavigations = {
   SIGNUP: 'Signup',
 } as const;
 
-export {mainNavigations, authNavigations};
+const drNavigations = {
+  DRFIRST: 'DrFirst',
+  DRSECOND: 'DrSecond',
+} as const;
+
+export {mainNavigations, authNavigations, drNavigations};

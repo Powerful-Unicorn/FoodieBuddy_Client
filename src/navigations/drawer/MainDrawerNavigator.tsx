@@ -2,7 +2,7 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import ChatScreen from '../../screens/chat/ChatScreen';
 import SettingsScreen from '../../screens/settings/SettingsScreen';
 import BookmarksScreen from '../../screens/bookmarks/BookmarksScreen';
-import {colors, mainNavigations} from '../../constants';
+import {colors, drNavigations, mainNavigations} from '../../constants';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {RouteProp} from '@react-navigation/native';
 import CustomDrawerContent from './CustomDrawerContent';

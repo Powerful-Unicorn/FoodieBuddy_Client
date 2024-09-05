@@ -81,7 +81,7 @@ const BookmarksScreen = () => {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: colors.WHITE, // 전체 배경색을 설정
+    backgroundColor: colors.WHITE,
   },
   container: {
     flex: 1,
