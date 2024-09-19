@@ -9,20 +9,42 @@ type DRSecondScreenProps = StackScreenProps<
   DRStackParamList,
   typeof drNavigations.DRSECOND
 >;
+const ingredientOptions = ['Meat', 'Milk']; // 추가 항목들
 
 function DRSecondScreen({navigation}: DRSecondScreenProps) {
-  const [dr, setDR] = useState<string | null>(null);
-  const handleVeganSelection = () => {
-    setDR('Vegan');
+  const [selectedDR, setSelectedDR] = useState<string[]>([]);
+  // 항목 선택 핸들러
+  const handleSelection = (option: string) => {
+    if (selectedDR.includes(option)) {
+      // 이미 선택된 항목이면 선택 해제
+      setSelectedDR(selectedDR.filter(item => item !== option));
+    } else {
+      // 선택되지 않은 항목이면 추가
+      setSelectedDR([...selectedDR, option]);
+    }
   };
-
+  // 다음 페이지로 이동하는 함수
   const handleNextButton = () => {
-    navigation.navigate(drNavigations.DRSECOND, {selectedDR: dr});
+    const selectedDRString = selectedDR.join(', '); // 배열을 문자열로 변환
+    navigation.navigate(drNavigations.DRSECOND, {selectedDR: selectedDRString});
   };
 
   return (
     <View style={styles.container}>
-      <Button title="Meat" onPress={handleVeganSelection} />
+      <Text>Ingredients:</Text>
+
+      {ingredientOptions.map(option => (
+        <TouchableOpacity
+          key={option}
+          style={styles.optionContainer}
+          onPress={() => handleSelection(option)}>
+          <Ionicons
+            name={selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'}
+            size={24}
+          />
+          <Text style={styles.optionText}>{option}</Text>
+        </TouchableOpacity>
+      ))}
 
       <View style={styles.navigationContainer}>
         <TouchableOpacity
@@ -45,6 +67,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  optionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  optionText: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
   navigationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -52,7 +83,6 @@ const styles = StyleSheet.create({
   },
   navBtn: {
     padding: 10,
-    backgroundColor: colors.GRAY_200,
     borderRadius: 5,
     marginHorizontal: 10,
   },

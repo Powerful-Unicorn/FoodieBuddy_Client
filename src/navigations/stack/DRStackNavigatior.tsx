@@ -6,7 +6,7 @@ import DRFirstScreen from '../../screens/dr/DRFirstScreen';
 import DRSecondScreen from '../../screens/dr/DRSecondScreen';
 
 export type DRStackParamList = {
-  [drNavigations.DRFIRST]: {selectedDR?: string | null}; // Mark selectedDR as optional
+  [drNavigations.DRFIRST]: undefined;
   [drNavigations.DRSECOND]: {selectedDR?: string | null}; // Mark selectedDR as optional
 };
 
