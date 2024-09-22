@@ -5,8 +5,8 @@ import {View} from 'react-native';
 
 function RootNavigator() {
   const isLoggedIn = false; //여기
-  return <>{isLoggedIn ? <MainDrawerNavigator /> : <DRStackNavigator />}</>;
-  //return <>{isLoggedIn ? <MainDrawerNavigator /> : <AuthStackNavigator />}</>;
+  //return <>{isLoggedIn ? <MainDrawerNavigator /> : <DRStackNavigator />}</>;
+  return <>{isLoggedIn ? <MainDrawerNavigator /> : <AuthStackNavigator />}</>;
 }
 
 export default RootNavigator;

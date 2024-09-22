@@ -4,10 +4,12 @@ import {StyleSheet} from 'react-native';
 import {drNavigations} from '../../constants';
 import DRFirstScreen from '../../screens/dr/DRFirstScreen';
 import DRSecondScreen from '../../screens/dr/DRSecondScreen';
+import LoginScreen from '../../screens/auth/LoginScreen';
 
 export type DRStackParamList = {
-  [drNavigations.DRFIRST]: undefined;
-  [drNavigations.DRSECOND]: {selectedDR?: string | null}; // Mark selectedDR as optional
+  //[drNavigations.DRFIRST]: undefined;
+  [drNavigations.DRSECOND]: {selectedDR?: string | null};
+  // Mark selectedDR as optional
 };
 
 const Stack = createStackNavigator<DRStackParamList>();
@@ -19,11 +21,11 @@ function DRStackNavigator() {
         cardStyle: {backgroundColor: 'white'},
         headerStyle: {shadowColor: 'white'},
       }}>
-      <Stack.Screen
+      {/* <Stack.Screen
         name={drNavigations.DRFIRST}
         component={DRFirstScreen}
         options={{title: 'Dietary Restriction Setting'}}
-      />
+      /> */}
       <Stack.Screen
         name={drNavigations.DRSECOND}
         component={DRSecondScreen}

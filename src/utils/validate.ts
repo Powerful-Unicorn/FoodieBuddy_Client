@@ -12,8 +12,8 @@ function validateUser(values: UserInformation) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
     errors.email = 'Invalid email format.';
   }
-  if (!(values.password.length >= 8 && values.password.length <= 20)) {
-    errors.password = 'Password must be between 8 and 20 characters.';
+  if (!(values.password.length >= 4 && values.password.length <= 20)) {
+    errors.password = 'Password must be between 4 and 20 characters.';
   }
   return errors;
 }

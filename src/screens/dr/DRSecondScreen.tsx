@@ -1,13 +1,13 @@
 import React, {useState} from 'react';
 import {View, Button, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {colors, drNavigations} from '../../constants';
+import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
-import {DRStackParamList} from '../../navigations/stack/DRStackNavigatior';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 
 type DRSecondScreenProps = StackScreenProps<
-  DRStackParamList,
-  typeof drNavigations.DRSECOND
+  AuthStackParamList,
+  typeof authNavigations.DRSECOND
 >;
 const ingredientOptions = ['Meat', 'Milk']; // 추가 항목들
 
@@ -26,7 +26,6 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
   // 다음 페이지로 이동하는 함수
   const handleNextButton = () => {
     const selectedDRString = selectedDR.join(', '); // 배열을 문자열로 변환
-    navigation.navigate(drNavigations.DRSECOND, {selectedDR: selectedDRString});
   };
 
   return (
