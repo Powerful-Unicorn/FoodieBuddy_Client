@@ -1,5 +1,12 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  Button,
+} from 'react-native';
 import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,11 +29,14 @@ const ingredientOptions = [
   'Other',
 ]; // 추가 항목들
 
-const dairySubOptions = ['Milk', 'Cheese', 'Other']; // Dairy 하위 항목
+const dairySubOptions = ['Milk', 'Cheese']; // Dairy 하위 항목
 
 function DRSecondScreen({navigation}: DRSecondScreenProps) {
   const [selectedDR, setSelectedDR] = useState<string[]>([]);
   const [showDairySubOptions, setShowDairySubOptions] = useState(false); // Dairy 하위 항목을 보여줄지 여부
+  const [showOtherInput, setShowOtherInput] = useState(false); // Other 항목 선택 시 input field 보여줄지 여부
+  const [otherText, setOtherText] = useState(''); // Other 텍스트 입력 값
+  const [isEditingOther, setIsEditingOther] = useState(true); // Other 항목 수정 여부 상태
 
   // 항목 선택 핸들러
   const handleSelection = (option: string) => {
@@ -43,6 +53,18 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
         // Dairy 선택 시 하위 항목 보이기 및 Milk, Cheese 선택
         setSelectedDR([...selectedDR, 'Dairy', 'Milk', 'Cheese']); // Milk, Cheese 자동 선택
         setShowDairySubOptions(true); // Dairy가 선택되면 하위 항목 보이기
+      }
+    } else if (option === 'Other') {
+      if (selectedDR.includes('Other')) {
+        // Other 선택 해제 시 input field 숨기기
+        setSelectedDR(selectedDR.filter(item => item !== 'Other'));
+        setShowOtherInput(false);
+        setOtherText(''); // 입력값 초기화
+      } else {
+        // Other 선택 시 input field 보이기
+        setSelectedDR([...selectedDR, option]);
+        setShowOtherInput(true);
+        setIsEditingOther(true); // 초기 상태에서 input field가 보이게 설정
       }
     } else {
       // 다른 항목들은 일반적인 선택/해제 로직
@@ -61,6 +83,17 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
     } else {
       setSelectedDR([...selectedDR, option]);
     }
+  };
+
+  // Other 항목 제출 핸들러
+  const handleSubmitOther = () => {
+    console.log('Other submitted: ', otherText);
+    setIsEditingOther(false); // 제출 후 input field를 일반 텍스트로 전환
+  };
+
+  // 수정 버튼 핸들러
+  const handleEditOther = () => {
+    setIsEditingOther(true); // "Edit" 버튼을 누르면 다시 input field로 전환
   };
 
   // 다음 페이지로 이동하는 함수
@@ -109,6 +142,28 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
               ))}
             </View>
           )}
+
+          {/* Other 선택 시 input field 또는 텍스트 표시 */}
+          {option === 'Other' && showOtherInput && (
+            <View style={styles.otherInputContainer}>
+              {isEditingOther ? (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Distinguish ingredients using comma"
+                    value={otherText}
+                    onChangeText={setOtherText}
+                  />
+                  <Button title="Submit" onPress={handleSubmitOther} />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.otherText}>Other: {otherText}</Text>
+                  <Button title="Edit" onPress={handleEditOther} />
+                </>
+              )}
+            </View>
+          )}
         </View>
       ))}
 
@@ -144,6 +199,22 @@ const styles = StyleSheet.create({
   },
   subOptionsContainer: {
     marginLeft: 40, // 하위 항목 들여쓰기
+  },
+  otherInputContainer: {
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    width: 200,
+  },
+  otherText: {
+    fontSize: 16,
+    marginVertical: 10,
   },
   navigationContainer: {
     flexDirection: 'row',
