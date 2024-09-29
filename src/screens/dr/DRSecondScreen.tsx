@@ -11,6 +11,7 @@ import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
+import {ScrollView} from 'react-native';
 
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -27,32 +28,46 @@ const ingredientOptions = [
   'Fruits',
   'Vegetables',
   'Other',
-]; // 추가 항목들
+]; // 메인 항목들
 
-const dairySubOptions = ['Milk', 'Cheese']; // Dairy 하위 항목
+const subOptionsMap: {[key: string]: string[]} = {
+  Dairy: ['Milk', 'Cheese'],
+  Meat: ['Red Meat', 'Other Meat'],
+  Seafood: ['Fish', 'Shellfish'],
+  Nuts: ['Tree Nuts', 'Peanuts'],
+  Fruits: ['Apple', 'Peach', 'Pear'],
+  Vegetables: ['Mushroom', 'Carrot', 'Potato', 'Cucumber', 'Green onion'],
+}; // 각 항목별 하위 항목들
 
 function DRSecondScreen({navigation}: DRSecondScreenProps) {
   const [selectedDR, setSelectedDR] = useState<string[]>([]);
-  const [showDairySubOptions, setShowDairySubOptions] = useState(false); // Dairy 하위 항목을 보여줄지 여부
+  const [showSubOptions, setShowSubOptions] = useState<{
+    [key: string]: boolean;
+  }>({
+    Dairy: false,
+    Meat: false,
+    Seafood: false,
+    Nuts: false,
+  }); // 각 항목별 하위 항목 표시 여부
   const [showOtherInput, setShowOtherInput] = useState(false); // Other 항목 선택 시 input field 보여줄지 여부
   const [otherText, setOtherText] = useState(''); // Other 텍스트 입력 값
   const [isEditingOther, setIsEditingOther] = useState(true); // Other 항목 수정 여부 상태
 
   // 항목 선택 핸들러
   const handleSelection = (option: string) => {
-    if (option === 'Dairy') {
-      if (selectedDR.includes('Dairy')) {
-        // Dairy 선택 해제 시 하위 항목 선택 해제 및 하위 옵션 닫기
+    const subOptions = subOptionsMap[option] || [];
+
+    if (subOptions.length > 0) {
+      if (selectedDR.includes(option)) {
+        // 메인 항목 선택 해제 시 하위 항목도 모두 해제
         setSelectedDR(
-          selectedDR.filter(
-            item => !['Dairy', ...dairySubOptions].includes(item),
-          ),
+          selectedDR.filter(item => ![option, ...subOptions].includes(item)),
         );
-        setShowDairySubOptions(false); // Dairy가 선택 해제되면 하위 항목 숨기기
+        setShowSubOptions({...showSubOptions, [option]: false});
       } else {
-        // Dairy 선택 시 하위 항목 보이기 및 Milk, Cheese 선택
-        setSelectedDR([...selectedDR, 'Dairy', 'Milk', 'Cheese']); // Milk, Cheese 자동 선택
-        setShowDairySubOptions(true); // Dairy가 선택되면 하위 항목 보이기
+        // 메인 항목 선택 시 하위 항목도 모두 선택
+        setSelectedDR([...selectedDR, option, ...subOptions]);
+        setShowSubOptions({...showSubOptions, [option]: true});
       }
     } else if (option === 'Other') {
       if (selectedDR.includes('Other')) {
@@ -76,12 +91,12 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
     }
   };
 
-  // Dairy 하위 항목 선택 핸들러
-  const handleDairySubSelection = (option: string) => {
-    if (selectedDR.includes(option)) {
-      setSelectedDR(selectedDR.filter(item => item !== option));
+  // 하위 항목 선택 핸들러
+  const handleSubSelection = (option: string, subOption: string) => {
+    if (selectedDR.includes(subOption)) {
+      setSelectedDR(selectedDR.filter(item => item !== subOption));
     } else {
-      setSelectedDR([...selectedDR, option]);
+      setSelectedDR([...selectedDR, subOption]);
     }
   };
 
@@ -103,102 +118,141 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text>Ingredients:</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        {ingredientOptions.map(option => (
+          <View key={option} style={styles.optionWrapper}>
+            {/* 메인 옵션 */}
+            <TouchableOpacity
+              style={styles.optionContainer}
+              onPress={() => handleSelection(option)}>
+              <Ionicons
+                name={
+                  selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'
+                }
+                size={24}
+                color={colors.ORANGE_800}
+              />
+              <Text style={styles.optionText}>{option}</Text>
+            </TouchableOpacity>
 
-      {ingredientOptions.map(option => (
-        <View key={option}>
-          {/* 메인 옵션 */}
+            {/* 하위 항목들: 각 항목 선택 시 표시 (가로 정렬) */}
+            {subOptionsMap[option] && showSubOptions[option] && (
+              <View style={styles.subOptionsRow}>
+                {subOptionsMap[option].map(subOption => (
+                  <TouchableOpacity
+                    key={subOption}
+                    style={styles.subOptionContainer}
+                    onPress={() => handleSubSelection(option, subOption)}>
+                    <Ionicons
+                      name={
+                        selectedDR.includes(subOption)
+                          ? 'checkbox'
+                          : 'checkbox-outline'
+                      }
+                      size={24}
+                      color={colors.ORANGE_200}
+                    />
+                    <Text style={styles.subOptionText}>{subOption}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Other 선택 시 input field 또는 텍스트 표시 */}
+            {option === 'Other' && showOtherInput && (
+              <View style={styles.otherInputContainer}>
+                {isEditingOther ? (
+                  <View style={styles.rowContainer}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Distinguish ingredients using comma"
+                      value={otherText}
+                      onChangeText={setOtherText}
+                    />
+                    <Button title="Submit" onPress={handleSubmitOther} />
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.otherText}>{otherText}</Text>
+                    <Button title="Edit" onPress={handleEditOther} />
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        ))}
+
+        {/* 하단 페이지 번호 및 이동 버튼 (중앙 정렬) */}
+        <View style={styles.navigationContainer}>
           <TouchableOpacity
-            style={styles.optionContainer}
-            onPress={() => handleSelection(option)}>
-            <Ionicons
-              name={
-                selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'
-              }
-              size={24}
-            />
-            <Text style={styles.optionText}>{option}</Text>
+            style={styles.navBtn}
+            onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
           </TouchableOpacity>
-
-          {/* Dairy 하위 항목들: Dairy 선택 시 표시 */}
-          {option === 'Dairy' && showDairySubOptions && (
-            <View style={styles.subOptionsContainer}>
-              {dairySubOptions.map(subOption => (
-                <TouchableOpacity
-                  key={subOption}
-                  style={styles.optionContainer}
-                  onPress={() => handleDairySubSelection(subOption)}>
-                  <Ionicons
-                    name={
-                      selectedDR.includes(subOption)
-                        ? 'checkbox'
-                        : 'checkbox-outline'
-                    }
-                    size={24}
-                  />
-                  <Text style={styles.optionText}>{subOption}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {/* Other 선택 시 input field 또는 텍스트 표시 */}
-          {option === 'Other' && showOtherInput && (
-            <View style={styles.otherInputContainer}>
-              {isEditingOther ? (
-                <>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Distinguish ingredients using comma"
-                    value={otherText}
-                    onChangeText={setOtherText}
-                  />
-                  <Button title="Submit" onPress={handleSubmitOther} />
-                </>
-              ) : (
-                <>
-                  <Text style={styles.otherText}>Other: {otherText}</Text>
-                  <Button title="Edit" onPress={handleEditOther} />
-                </>
-              )}
-            </View>
-          )}
+          <Text style={styles.pageNumber}>2</Text>
+          <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
+            <Ionicons
+              name="chevron-forward"
+              size={24}
+              color={colors.GRAY_700}
+            />
+          </TouchableOpacity>
         </View>
-      ))}
-
-      <View style={styles.navigationContainer}>
-        <TouchableOpacity
-          style={styles.navBtn}
-          onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
-        </TouchableOpacity>
-        <Text style={styles.pageNumber}>2</Text>
-        <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-          <Ionicons name="chevron-forward" size={24} color={colors.GRAY_700} />
-        </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1, // ScrollView의 내용이 화면에 꽉 차도록 설정
+  },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    paddingHorizontal: 20,
+    justifyContent: 'flex-start',
+  },
+  optionWrapper: {
+    alignItems: 'flex-start',
+    backgroundColor: '#fff', // 배경색 추가
+    padding: 15, // 패딩 추가
+    marginVertical: 10, // 상하 간격
+    borderRadius: 10, // 둥근 테두리
+    shadowColor: '#000', // 그림자 색상
+    shadowOffset: {width: 0, height: 2}, // 그림자 오프셋
+    shadowOpacity: 0.3, // 그림자 불투명도
+    shadowRadius: 4, // 그림자 반경
+    elevation: 5, // Android 그림자 효과
+  },
+  rowContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   optionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 10,
+    height: 45,
   },
   optionText: {
     marginLeft: 10,
     fontSize: 16,
   },
-  subOptionsContainer: {
-    marginLeft: 40, // 하위 항목 들여쓰기
+  subOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginLeft: 40,
+  },
+  subOptionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+    marginRight: 15,
+  },
+  subOptionText: {
+    marginLeft: 5,
+    fontSize: 14,
   },
   otherInputContainer: {
     marginTop: 10,
@@ -210,16 +264,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
-    width: 200,
+    flex: 1,
+    marginRight: 10,
   },
   otherText: {
     fontSize: 16,
     marginVertical: 10,
+    marginRight: 10,
   },
   navigationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'center',
+    marginTop: 30,
   },
   navBtn: {
     padding: 10,
