@@ -4,6 +4,7 @@ import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
+import {ScrollView} from 'react-native';
 
 type DRFirstScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -46,66 +47,93 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text>Dietary Restriction:</Text>
+    <ScrollView>
+      <View style={styles.container}>
+        {dietaryOptions.map(option => (
+          <View key={option} style={[styles.optionWrapper, styles.shadowStyle]}>
+            <TouchableOpacity
+              style={styles.optionContainer}
+              onPress={() => handleSelection(option)}>
+              <Ionicons
+                name={
+                  selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'
+                }
+                size={24}
+                color={colors.ORANGE_800}
+              />
+              <Text style={styles.optionText}>{option}</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
 
-      {dietaryOptions.map(option => (
-        <TouchableOpacity
-          key={option}
-          style={styles.optionContainer}
-          onPress={() => handleSelection(option)}>
-          <Ionicons
-            name={selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'}
-            size={24}
-          />
-          <Text style={styles.optionText}>{option}</Text>
-        </TouchableOpacity>
-      ))}
-
-      {/* 페이지 이동 */}
-
-      <View style={styles.navigationContainer}>
-        <TouchableOpacity
-          style={styles.navBtn}
-          onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
-        </TouchableOpacity>
-        <Text style={styles.pageNumber}>1</Text>
-        <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-          <Ionicons name="chevron-forward" size={24} color={colors.GRAY_700} />
-        </TouchableOpacity>
+        {/* 페이지 이동 */}
+        <View style={styles.navigationContainer}>
+          <TouchableOpacity
+            style={styles.navBtn}
+            onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
+          </TouchableOpacity>
+          <Text style={styles.pageNumber}>1</Text>
+          <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
+            <Ionicons
+              name="chevron-forward"
+              size={24}
+              color={colors.GRAY_700}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  optionWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 10,
+  },
+  shadowStyle: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   optionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
   },
   optionText: {
     marginLeft: 10,
     fontSize: 16,
+    color: '#333',
   },
   navigationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'center',
+    marginTop: 30,
   },
   navBtn: {
     padding: 10,
     borderRadius: 5,
     marginHorizontal: 10,
-  },
-  nextBtn: {
-    backgroundColor: colors.ORANGE_500,
   },
   pageNumber: {
     fontSize: 16,
