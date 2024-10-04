@@ -1,28 +1,64 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
+  Text,
   StyleSheet,
   View,
-  Text,
-  TouchableOpacity,
   TextInput,
   Image,
   FlatList,
+  TouchableOpacity,
 } from 'react-native';
+import {RouteProp} from '@react-navigation/native'; // RouteProp 사용
 import {colors} from '../../constants/colors';
 import ImageInput from '../../components/ImageInput';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {MainDrawerParamList} from '../../navigations/drawer/MainDrawerNavigator';
+import {mainNavigations} from '../../constants';
+import ChatbotInstruction from '../../components/ChatbotInstruction';
 
 interface Message {
   id: string;
   text?: string;
   imageUri?: string;
   sentByUser?: boolean;
+  buttons?: string[];
 }
 
-function ChatScreen() {
+// ChatScreen의 route 타입을 명시
+type ChatScreenRouteProp = RouteProp<
+  MainDrawerParamList,
+  typeof mainNavigations.CHAT
+>;
+
+interface ChatScreenProps {
+  route: ChatScreenRouteProp;
+}
+
+function ChatScreen({route}: ChatScreenProps) {
+  const {showInstruction = false} = route.params || {};
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // "+" 버튼 클릭 시 챗봇 instruction 메시지 추가
+  const addInstructionMessage = () => {
+    const instructionMessage: Message = {
+      id: Date.now().toString(),
+      buttons: [
+        'Food Recommendation',
+        'Upload Menu Photo',
+        'Upload Dish Photo',
+      ],
+      sentByUser: false,
+    };
+    setMessages(prevMessages => [...prevMessages, instructionMessage]);
+  };
+
+  useEffect(() => {
+    if (showInstruction) {
+      addInstructionMessage(); // "+" 버튼 클릭 시 메시지 추가
+    }
+  }, [showInstruction]);
 
   // 메시지 전송
   const sendMessage = () => {
@@ -42,7 +78,6 @@ function ChatScreen() {
   // 이미지 선택 콜백 함수
   const handleImageInput = () => {
     console.log('ImageInput 클릭됨');
-    // ImagePicker 호출 또는 이미지 선택 로직을 추가하세요
   };
 
   // 메시지 렌더링
@@ -56,6 +91,8 @@ function ChatScreen() {
         <Image source={{uri: item.imageUri}} style={styles.image} />
       ) : null}
       {item.text ? <Text style={styles.messageText}>{item.text}</Text> : null}
+      {item.buttons ? <ChatbotInstruction buttons={item.buttons} /> : null}
+      {/* 버튼 메시지 컴포넌트 사용 */}
     </View>
   );
 
@@ -76,12 +113,11 @@ function ChatScreen() {
       ) : null}
 
       <View style={styles.inputContainer}>
-        {/* ImageInput 컴포넌트 삽입 */}
         <ImageInput onChange={handleImageInput} />
 
         <TextInput
           style={styles.textInput}
-          placeholder="메시지를 입력하세요"
+          placeholder="Ask me anything"
           value={inputMessage}
           onChangeText={setInputMessage}
         />
@@ -100,7 +136,7 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start', // 메시지가 위에서부터 쌓임
   },
   inputContainer: {
     flexDirection: 'row',
