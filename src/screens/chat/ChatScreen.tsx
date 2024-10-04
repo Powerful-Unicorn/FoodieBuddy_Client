@@ -1,4 +1,3 @@
-import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -9,24 +8,18 @@ import {
   Image,
   FlatList,
 } from 'react-native';
-import {DrawerNavigationProp} from '@react-navigation/drawer';
-import {MainDrawerParamList} from '../../navigations/drawer/MainDrawerNavigator';
-import {colors} from '../../constants';
-import {
-  launchImageLibrary,
-  ImageLibraryOptions,
-} from 'react-native-image-picker';
-
-type Navigation = DrawerNavigationProp<MainDrawerParamList>;
+import {colors} from '../../constants/colors';
+import ImageInput from '../../components/ImageInput';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 interface Message {
   id: string;
   text?: string;
   imageUri?: string;
+  sentByUser?: boolean;
 }
 
 function ChatScreen() {
-  const navigation = useNavigation<Navigation>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -38,36 +31,31 @@ function ChatScreen() {
         id: Date.now().toString(),
         text: inputMessage,
         imageUri: selectedImage || undefined,
+        sentByUser: true,
       };
-      setMessages(prevMessages => [newMessage, ...prevMessages]);
+      setMessages(prevMessages => [...prevMessages, newMessage]);
       setInputMessage('');
       setSelectedImage(null);
     }
   };
 
-  // 이미지 선택
-  const pickImage = async () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'photo',
-      quality: 1,
-    };
-
-    const result = await launchImageLibrary(options);
-    if (result.assets && result.assets.length > 0) {
-      setSelectedImage(result.assets[0].uri || null);
-    }
+  // 이미지 선택 콜백 함수
+  const handleImageInput = () => {
+    console.log('ImageInput 클릭됨');
+    // ImagePicker 호출 또는 이미지 선택 로직을 추가하세요
   };
 
   // 메시지 렌더링
   const renderItem = ({item}: {item: Message}) => (
-    <View style={{marginVertical: 10}}>
+    <View
+      style={[
+        styles.messageContainer,
+        item.sentByUser ? styles.sentMessage : styles.receivedMessage,
+      ]}>
       {item.imageUri ? (
-        <Image
-          source={{uri: item.imageUri}}
-          style={{width: 200, height: 200}}
-        />
+        <Image source={{uri: item.imageUri}} style={styles.image} />
       ) : null}
-      {item.text ? <Text>{item.text}</Text> : null}
+      {item.text ? <Text style={styles.messageText}>{item.text}</Text> : null}
     </View>
   );
 
@@ -77,7 +65,7 @@ function ChatScreen() {
         data={messages}
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        inverted // 최신 메시지를 아래로
+        contentContainerStyle={styles.flatListContent}
       />
 
       {selectedImage ? (
@@ -88,17 +76,17 @@ function ChatScreen() {
       ) : null}
 
       <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={pickImage} style={{marginRight: 10}}>
-          <Text style={styles.icon}>📷</Text>
-        </TouchableOpacity>
+        {/* ImageInput 컴포넌트 삽입 */}
+        <ImageInput onChange={handleImageInput} />
+
         <TextInput
           style={styles.textInput}
-          placeholder="Ask me anything.."
+          placeholder="메시지를 입력하세요"
           value={inputMessage}
           onChangeText={setInputMessage}
         />
         <TouchableOpacity onPress={sendMessage} style={{marginLeft: 10}}>
-          <Text style={styles.icon}>Send</Text>
+          <MaterialIcons name="send" size={28} color={colors.GRAY_500} />
         </TouchableOpacity>
       </View>
     </View>
@@ -109,6 +97,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  flatListContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -121,8 +113,28 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 20,
   },
-  icon: {
-    fontSize: 24,
+  messageContainer: {
+    marginVertical: 10,
+    padding: 10,
+    borderRadius: 10,
+    maxWidth: '70%',
+  },
+  sentMessage: {
+    backgroundColor: '#d1f7c4',
+    alignSelf: 'flex-end',
+  },
+  receivedMessage: {
+    backgroundColor: '#f1f1f1',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 5,
   },
 });
 
