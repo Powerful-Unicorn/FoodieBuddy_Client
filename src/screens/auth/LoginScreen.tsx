@@ -7,6 +7,8 @@ import {validateLogin} from '../../utils';
 import {authNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
+import api from '../../apis/api';
+import axios, {AxiosError} from 'axios';
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -22,7 +24,6 @@ function LoginScreen({navigation}: LoginScreenProps) {
 
   // API 호출 함수 정의
   const handleSignup = async () => {
-    const url = 'https://api.foodiebuddy.kro.kr/user/signup';
     const requestBody = {
       email: login.values.email,
       password: login.values.password,
@@ -30,29 +31,27 @@ function LoginScreen({navigation}: LoginScreenProps) {
 
     console.log('Request Body:', requestBody); // 요청 데이터 확인
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // JSON 형식으로 데이터 전송
-        },
-        body: JSON.stringify(requestBody), // 이메일과 비밀번호를 JSON 형식으로 변환
-      });
-      console.log('Response Status:', response.status); // 응답 상태 코드 확인
-      console.log('Response Status Text:', response.statusText); // 상태 텍스트 로그 추가
-
-      if (response.ok) {
-        const data = await response.json(); // 서버로부터 받은 응답을 JSON으로 변환
-        console.log('Response Data:', data);
-        Alert.alert('Success', 'User registered successfully!');
-        navigation.navigate(authNavigations.DRFIRST); // 성공 시 다음 화면으로 이동
-      } else {
-        const errorData = await response.json();
-        console.log('Error Data:', errorData);
-        Alert.alert('Error', errorData.message || 'Something went wrong');
-      }
+      const response = await api.post('/user/signup', requestBody);
+      console.log('Response Data:', response.data);
+      Alert.alert('Success', 'User registered successfully!');
+      navigation.navigate(authNavigations.DRFIRST);
     } catch (error) {
-      Alert.alert('Error', 'Failed to sign up');
-      console.error('Signup error:', error);
+      // error를 AxiosError 타입으로 캐스팅
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          console.log('Error Data:', error.response.data);
+          Alert.alert(
+            'Error',
+            error.response.data.message || 'Something went wrong',
+          );
+        } else {
+          Alert.alert('Error', 'Failed to sign up');
+        }
+      } else {
+        // AxiosError가 아닌 다른 타입의 에러 처리
+        Alert.alert('Error', 'An unexpected error occurred');
+        console.error('Unexpected error:', error);
+      }
     }
   };
 
