@@ -8,7 +8,9 @@ import {authNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
-import axios, {AxiosError} from 'axios';
+import axios from 'axios';
+import {useDispatch} from 'react-redux';
+import {setUserId} from '../../states/userSlice'; // Redux 액션 가져오기
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -22,21 +24,21 @@ function LoginScreen({navigation}: LoginScreenProps) {
     validate: validateLogin,
   });
 
-  // API 호출 함수 정의
+  const dispatch = useDispatch(); // Redux dispatch 함수 가져오기
+
   const handleSignup = async () => {
     const requestBody = {
       email: login.values.email,
       password: login.values.password,
     };
 
-    console.log('Request Body:', requestBody); // 요청 데이터 확인
     try {
       const response = await api.post('/user/signup', requestBody);
       console.log('Response Data:', response.data);
+      dispatch(setUserId(response.data.userId)); // userId를 Redux 상태에 저장
       Alert.alert('Success', 'User registered successfully!');
       navigation.navigate(authNavigations.DRFIRST);
     } catch (error) {
-      // error를 AxiosError 타입으로 캐스팅
       if (axios.isAxiosError(error)) {
         if (error.response) {
           console.log('Error Data:', error.response.data);
@@ -48,7 +50,6 @@ function LoginScreen({navigation}: LoginScreenProps) {
           Alert.alert('Error', 'Failed to sign up');
         }
       } else {
-        // AxiosError가 아닌 다른 타입의 에러 처리
         Alert.alert('Error', 'An unexpected error occurred');
         console.error('Unexpected error:', error);
       }
@@ -56,8 +57,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
   };
 
   const handleSubmit = () => {
-    console.log('values', login.values);
-    handleSignup(); // 로그인 시도 시 handleSignup 함수 호출
+    handleSignup();
   };
 
   return (
@@ -90,7 +90,6 @@ function LoginScreen({navigation}: LoginScreenProps) {
         variant="filled"
         size="large"
         onPress={handleSubmit}
-        //onPress={() => navigation.navigate(authNavigations.DRFIRST)}
       />
     </SafeAreaView>
   );
