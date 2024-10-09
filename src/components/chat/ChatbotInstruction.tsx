@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
-import {colors} from '../constants';
+import {colors} from '../../constants';
 interface ChatbotInstructionProps {
   buttons: string[];
 }
