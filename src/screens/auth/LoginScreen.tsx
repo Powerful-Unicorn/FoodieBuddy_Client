@@ -14,7 +14,7 @@ import {setUserId} from '../../states/userSlice'; // Redux 액션 가져오기
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,
-  typeof authNavigations.ONBOARDING
+  typeof authNavigations.LOGIN
 >;
 
 function LoginScreen({navigation}: LoginScreenProps) {

@@ -55,33 +55,36 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
     };
 
     try {
-      const response = await api.post('/user/dr1', requestBody);
-      console.log('Response Data:', response.data);
+      const response = await api.post('/user/dr1', requestBody, {
+        headers: {
+          'Content-Type': 'application/json', // Content-Type을 명시적으로 설정
+        },
+      });
 
-      const {
-        meat,
-        egg,
-        dairy,
-        seafood,
-        nuts,
-        gluten,
-        fruits,
-        vegetables,
-        other,
-      } = response.data;
+      console.log('Request Body:', requestBody);
+      console.log('Full Response Data:', response.data);
+
+      const {meat, egg, dairy, seafood, nut, gluten, fruit, vegetable, other} =
+        response.data;
 
       // Alert로 받은 응답 내용을 보여줌
       Alert.alert(
         'Diet Preferences',
-        `Meat: ${meat || 'None'}, Egg: ${egg}, Dairy: ${dairy || 'None'}, 
-      Seafood: ${seafood || 'None'}, Nuts: ${nuts || 'None'}, 
-      Gluten: ${gluten}, Fruits: ${fruits || 'None'}, 
-      Vegetables: ${vegetables || 'None'}, Other: ${other || 'None'}`,
+        `Meat: ${meat || 'all kinds'}, 
+  Egg: ${egg === false ? 'false' : 'true'}, 
+  Dairy: ${dairy || ''}, 
+  Seafood: ${seafood || ''}, 
+  Nut: ${nut || ''}, 
+  Gluten: ${gluten === false ? 'false' : 'true'}, 
+  Fruit: ${fruit || ''}, 
+  Vegetable: ${vegetable || ''}, 
+  Other: ${other || ''}`,
       );
 
-      // 다음 페이지로 이동하고 선택한 데이터를 전달
+      // 다음 페이지로 이동하고 응답 데이터를 전달
       navigation.navigate(authNavigations.DRSECOND, {
-        selectedDR: selectedDR.join(', '), // 선택된 식사 제한 사항을 두 번째 페이지로 전달
+        selectedDR: selectedDR.join(', '), // 선택한 식단 정보 추가
+        dietRestrictions: response.data, // API 응답 데이터를 두 번째 페이지로 전달
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {

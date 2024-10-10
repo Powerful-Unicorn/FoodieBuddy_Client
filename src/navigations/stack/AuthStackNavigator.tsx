@@ -13,7 +13,21 @@ export type AuthStackParamList = {
   [authNavigations.LOGIN]: undefined;
   [authNavigations.SIGNUP]: undefined;
   [authNavigations.DRFIRST]: undefined;
-  [authNavigations.DRSECOND]: {selectedDR: string};
+  [authNavigations.DRSECOND]: {
+    selectedDR: string; // Keep the selectedDR parameter
+    dietRestrictions: {
+      // Add dietRestrictions parameter
+      meat: string;
+      egg: boolean;
+      dairy: string;
+      seafood: string;
+      nuts: string;
+      gluten: boolean;
+      fruits: string;
+      vegetables: string;
+      other: string;
+    };
+  };
 };
 
 const Stack = createStackNavigator<AuthStackParamList>();
