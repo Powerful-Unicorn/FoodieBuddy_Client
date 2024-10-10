@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Text, Image, StyleSheet} from 'react-native';
 import ChatbotInstruction from './ChatbotInstruction';
+import {colors} from '../../constants';
 
 interface MessageItemProps {
   item: {
@@ -35,12 +36,13 @@ const styles = StyleSheet.create({
     maxWidth: '70%',
   },
   sentMessage: {
-    backgroundColor: '#d1f7c4',
+    backgroundColor: colors.YELLOW_200,
     alignSelf: 'flex-end',
   },
   receivedMessage: {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: colors.GRAY_200,
     alignSelf: 'flex-start',
+    width: 500,
   },
   messageText: {
     fontSize: 16,

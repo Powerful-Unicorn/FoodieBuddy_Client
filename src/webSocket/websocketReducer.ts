@@ -3,8 +3,7 @@ import {
   WEBSOCKET_CONNECT,
   WEBSOCKET_DISCONNECT,
   WEBSOCKET_MESSAGE,
-} from './websocketActionTypes'; // 액션 타입을 여기서 import
-
+} from './websocketActionTypes'; 
 interface WebSocketState {
   isConnected: boolean;
   messages: string[];

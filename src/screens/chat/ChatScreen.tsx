@@ -1,7 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {View, FlatList, StyleSheet, Text} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {connectWebSocket} from '../../webSocket/websocketActions';
 import {RootState, AppDispatch} from '../../states/store';
 import MessageItem from '../../components/chat/MessageItem';
 import MessageInput from '../../components/chat/MessageInput';
@@ -29,10 +28,17 @@ const ChatScreen: React.FC = () => {
       console.log('WebSocket connected');
       dispatch({type: WEBSOCKET_CONNECT});
     };
-
+    // WebSocket에서 수신한 메시지 처리
     wsRef.current.onmessage = event => {
       console.log('WebSocket message received: ', event.data);
-      dispatch({type: WEBSOCKET_MESSAGE, payload: event.data});
+
+      // 받은 데이터를 객체 형태로 변환하여 저장
+      const parsedMessage = {
+        text: event.data,
+        sentByUser: false, // 상대방이 보낸 메시지로 가정
+      };
+
+      dispatch({type: WEBSOCKET_MESSAGE, payload: parsedMessage});
     };
 
     wsRef.current.onclose = () => {
@@ -63,9 +69,16 @@ const ChatScreen: React.FC = () => {
 
       <MessageInput
         onSend={message => {
-          // WebSocket을 통해 메시지 전송 가능 (추가 구현 필요)
           console.log('Message to send:', message);
           wsRef.current?.send(message); // WebSocket을 통해 메시지 전송
+
+          // 내가 보낸 메시지를 바로 화면에 표시
+          const sentMessage = {
+            text: message,
+            sentByUser: true,
+          };
+
+          dispatch({type: WEBSOCKET_MESSAGE, payload: sentMessage});
         }}
       />
     </View>
