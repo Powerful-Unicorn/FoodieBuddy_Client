@@ -9,17 +9,17 @@ import {
   WEBSOCKET_MESSAGE,
   WEBSOCKET_DISCONNECT,
 } from '../../webSocket/websocketActionTypes';
+import RNFetchBlob from 'react-native-blob-util';
 
 const ChatScreen: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const {isConnected, messages} = useSelector(
     (state: RootState) => state.websocket,
   );
-
-  // WebSocket 객체를 useRef로 관리
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    // WebSocket 연결 설정
     wsRef.current = new WebSocket(
       'ws://api.foodiebuddy.kro.kr:8000/recommendation',
     );
@@ -28,17 +28,27 @@ const ChatScreen: React.FC = () => {
       console.log('WebSocket connected');
       dispatch({type: WEBSOCKET_CONNECT});
     };
+
     // WebSocket에서 수신한 메시지 처리
-    wsRef.current.onmessage = event => {
+    wsRef.current.onmessage = async event => {
       console.log('WebSocket message received: ', event.data);
 
-      // 받은 데이터를 객체 형태로 변환하여 저장
-      const parsedMessage = {
-        text: event.data,
-        sentByUser: false, // 상대방이 보낸 메시지로 가정
-      };
-
-      dispatch({type: WEBSOCKET_MESSAGE, payload: parsedMessage});
+      if (typeof event.data === 'string') {
+        // 텍스트 메시지 처리
+        const parsedMessage = {
+          text: event.data,
+          sentByUser: false, // 상대방이 보낸 메시지로 가정
+        };
+        dispatch({type: WEBSOCKET_MESSAGE, payload: parsedMessage});
+      } else if (event.data instanceof ArrayBuffer) {
+        // 이미지 데이터가 ArrayBuffer로 수신된 경우 처리
+        const base64Image = await arrayBufferToBase64(event.data);
+        const imageMessage = {
+          imageUri: `data:image/png;base64,${base64Image}`,
+          sentByUser: false,
+        };
+        dispatch({type: WEBSOCKET_MESSAGE, payload: imageMessage});
+      }
     };
 
     wsRef.current.onclose = () => {
@@ -53,6 +63,16 @@ const ChatScreen: React.FC = () => {
       }
     };
   }, [dispatch]);
+
+  // ArrayBuffer를 Base64로 변환하는 함수 (react-native-blob-util 사용)
+  const arrayBufferToBase64 = async (buffer: ArrayBuffer): Promise<string> => {
+    const binary = String.fromCharCode.apply(
+      null,
+      new Uint8Array(buffer) as unknown as number[],
+    );
+    const base64 = RNFetchBlob.base64.encode(binary);
+    return base64;
+  };
 
   return (
     <View style={styles.container}>

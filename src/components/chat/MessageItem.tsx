@@ -19,11 +19,11 @@ function MessageItem({item}: MessageItemProps) {
         styles.messageContainer,
         item.sentByUser ? styles.sentMessage : styles.receivedMessage,
       ]}>
-      {item.imageUri ? (
+      {item.imageUri && (
         <Image source={{uri: item.imageUri}} style={styles.image} />
-      ) : null}
-      {item.text ? <Text style={styles.messageText}>{item.text}</Text> : null}
-      {item.buttons ? <ChatbotInstruction buttons={item.buttons} /> : null}
+      )}
+      {item.text && <Text style={styles.messageText}>{item.text}</Text>}
+      {item.buttons && <ChatbotInstruction buttons={item.buttons} />}
     </View>
   );
 }
