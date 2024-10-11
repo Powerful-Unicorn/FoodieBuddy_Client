@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import {View, FlatList, StyleSheet, Text} from 'react-native';
+import {View, FlatList, StyleSheet, Text, Image} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState, AppDispatch} from '../../states/store';
 import MessageItem from '../../components/chat/MessageItem';
@@ -9,7 +9,6 @@ import {
   WEBSOCKET_MESSAGE,
   WEBSOCKET_DISCONNECT,
 } from '../../webSocket/websocketActionTypes';
-import RNFetchBlob from 'react-native-blob-util';
 
 const ChatScreen: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -23,6 +22,8 @@ const ChatScreen: React.FC = () => {
     wsRef.current = new WebSocket(
       'ws://api.foodiebuddy.kro.kr:8000/recommendation',
     );
+    // WebSocket이 바이너리 데이터를 Blob 형식으로 처리하도록 설정
+    wsRef.current.binaryType = 'blob';
 
     wsRef.current.onopen = () => {
       console.log('WebSocket connected');
@@ -31,7 +32,8 @@ const ChatScreen: React.FC = () => {
 
     // WebSocket에서 수신한 메시지 처리
     wsRef.current.onmessage = async event => {
-      console.log('WebSocket message received: ', event.data);
+      console.log('WebSocket message received (type): ', typeof event.data);
+      console.log('WebSocket message received (data): ', event.data);
 
       if (typeof event.data === 'string') {
         // 텍스트 메시지 처리
@@ -40,11 +42,11 @@ const ChatScreen: React.FC = () => {
           sentByUser: false, // 상대방이 보낸 메시지로 가정
         };
         dispatch({type: WEBSOCKET_MESSAGE, payload: parsedMessage});
-      } else if (event.data instanceof ArrayBuffer) {
-        // 이미지 데이터가 ArrayBuffer로 수신된 경우 처리
-        const base64Image = await arrayBufferToBase64(event.data);
+      } else if (event.data instanceof Blob) {
+        // Blob 데이터를 URL로 변환하여 이미지 렌더링
+        const imageUrl = URL.createObjectURL(event.data);
         const imageMessage = {
-          imageUri: `data:image/png;base64,${base64Image}`,
+          imageUri: imageUrl,
           sentByUser: false,
         };
         dispatch({type: WEBSOCKET_MESSAGE, payload: imageMessage});
@@ -64,16 +66,6 @@ const ChatScreen: React.FC = () => {
     };
   }, [dispatch]);
 
-  // ArrayBuffer를 Base64로 변환하는 함수 (react-native-blob-util 사용)
-  const arrayBufferToBase64 = async (buffer: ArrayBuffer): Promise<string> => {
-    const binary = String.fromCharCode.apply(
-      null,
-      new Uint8Array(buffer) as unknown as number[],
-    );
-    const base64 = RNFetchBlob.base64.encode(binary);
-    return base64;
-  };
-
   return (
     <View style={styles.container}>
       {!isConnected && (
@@ -82,7 +74,13 @@ const ChatScreen: React.FC = () => {
 
       <FlatList
         data={messages}
-        renderItem={({item}) => <MessageItem item={item} />}
+        renderItem={({item}) =>
+          item.imageUri ? (
+            <Image source={{uri: item.imageUri}} style={styles.image} />
+          ) : (
+            <MessageItem item={item} />
+          )
+        }
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.flatListContent}
       />
@@ -118,6 +116,12 @@ const styles = StyleSheet.create({
   flatListContent: {
     flexGrow: 1,
     justifyContent: 'flex-start',
+  },
+  image: {
+    width: 200,
+    height: 200,
+    marginVertical: 10,
+    alignSelf: 'center',
   },
 });
 
