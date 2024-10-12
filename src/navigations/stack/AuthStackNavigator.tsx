@@ -23,8 +23,8 @@ export type AuthStackParamList = {
       seafood: string;
       nuts: string;
       gluten: boolean;
-      fruits: string;
-      vegetables: string;
+      fruit: string;
+      vegetable: string;
       other: string;
     };
   };

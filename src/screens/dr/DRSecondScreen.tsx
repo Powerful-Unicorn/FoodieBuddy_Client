@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   TextInput,
   Button,
+  ScrollView,
 } from 'react-native';
-import {authNavigations, colors} from '../../constants';
-import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {authNavigations, colors, mainNavigations} from '../../constants';
+import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
-import {ScrollView} from 'react-native';
-import {mainNavigations} from '../../constants';
+
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
   typeof authNavigations.DRSECOND
@@ -28,7 +28,7 @@ const ingredientOptions = [
   'Fruits',
   'Vegetables',
   'Other',
-]; // 메인 항목들
+];
 
 const subOptionsMap: {[key: string]: string[]} = {
   Dairy: ['Milk', 'Cheese'],
@@ -37,9 +37,10 @@ const subOptionsMap: {[key: string]: string[]} = {
   Nuts: ['Tree Nuts', 'Peanuts'],
   Fruits: ['Apple', 'Peach', 'Pear'],
   Vegetables: ['Mushroom', 'Carrot', 'Potato', 'Cucumber', 'Green onion'],
-}; // 각 항목별 하위 항목들
+};
 
-function DRSecondScreen({navigation}: DRSecondScreenProps) {
+function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
+  const {dietRestrictions} = route.params;
   const [selectedDR, setSelectedDR] = useState<string[]>([]);
   const [showSubOptions, setShowSubOptions] = useState<{
     [key: string]: boolean;
@@ -48,10 +49,37 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
     Meat: false,
     Seafood: false,
     Nuts: false,
-  }); // 각 항목별 하위 항목 표시 여부
-  const [showOtherInput, setShowOtherInput] = useState(false); // Other 항목 선택 시 input field 보여줄지 여부
-  const [otherText, setOtherText] = useState(''); // Other 텍스트 입력 값
-  const [isEditingOther, setIsEditingOther] = useState(true); // Other 항목 수정 여부 상태
+  });
+  const [showOtherInput, setShowOtherInput] = useState(false);
+  const [otherText, setOtherText] = useState(dietRestrictions.other || '');
+  const [isEditingOther, setIsEditingOther] = useState(true);
+
+  // dietRestrictions에 따라 초기값 설정
+  useEffect(() => {
+    const initialSelectedDR: string[] = [];
+
+    // Meat 처리: "all kinds"라면 하위 항목 모두 포함
+    if (dietRestrictions.meat === 'all kinds') {
+      initialSelectedDR.push('Meat', ...subOptionsMap['Meat']);
+      setShowSubOptions(prev => ({...prev, Meat: true}));
+    }
+
+    // Egg, Dairy, Seafood, 기타 항목 처리
+    if (dietRestrictions.egg === true) initialSelectedDR.push('Egg');
+    if (dietRestrictions.dairy) initialSelectedDR.push('Dairy');
+    if (dietRestrictions.seafood) initialSelectedDR.push('Seafood');
+    if (dietRestrictions.nuts) initialSelectedDR.push('Nuts');
+    if (dietRestrictions.gluten === true) initialSelectedDR.push('Gluten');
+    if (dietRestrictions.fruit) initialSelectedDR.push('Fruits');
+    if (dietRestrictions.vegetable) initialSelectedDR.push('Vegetables');
+    if (dietRestrictions.other) {
+      initialSelectedDR.push('Other');
+      setShowOtherInput(true);
+      setIsEditingOther(false);
+    }
+
+    setSelectedDR(initialSelectedDR);
+  }, [dietRestrictions]);
 
   // 항목 선택 핸들러
   const handleSelection = (option: string) => {
@@ -59,30 +87,25 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
 
     if (subOptions.length > 0) {
       if (selectedDR.includes(option)) {
-        // 메인 항목 선택 해제 시 하위 항목도 모두 해제
         setSelectedDR(
           selectedDR.filter(item => ![option, ...subOptions].includes(item)),
         );
         setShowSubOptions({...showSubOptions, [option]: false});
       } else {
-        // 메인 항목 선택 시 하위 항목도 모두 선택
         setSelectedDR([...selectedDR, option, ...subOptions]);
         setShowSubOptions({...showSubOptions, [option]: true});
       }
     } else if (option === 'Other') {
       if (selectedDR.includes('Other')) {
-        // Other 선택 해제 시 input field 숨기기
         setSelectedDR(selectedDR.filter(item => item !== 'Other'));
         setShowOtherInput(false);
-        setOtherText(''); // 입력값 초기화
+        setOtherText('');
       } else {
-        // Other 선택 시 input field 보이기
         setSelectedDR([...selectedDR, option]);
         setShowOtherInput(true);
-        setIsEditingOther(true); // 초기 상태에서 input field가 보이게 설정
+        setIsEditingOther(true);
       }
     } else {
-      // 다른 항목들은 일반적인 선택/해제 로직
       if (selectedDR.includes(option)) {
         setSelectedDR(selectedDR.filter(item => item !== option));
       } else {
@@ -91,7 +114,6 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
     }
   };
 
-  // 하위 항목 선택 핸들러
   const handleSubSelection = (option: string, subOption: string) => {
     if (selectedDR.includes(subOption)) {
       setSelectedDR(selectedDR.filter(item => item !== subOption));
@@ -100,21 +122,14 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
     }
   };
 
-  // Other 항목 제출 핸들러
   const handleSubmitOther = () => {
-    console.log('Other submitted: ', otherText);
-    setIsEditingOther(false); // 제출 후 input field를 일반 텍스트로 전환
+    setIsEditingOther(false);
   };
 
-  // 수정 버튼 핸들러
-  const handleEditOther = () => {
-    setIsEditingOther(true); // "Edit" 버튼을 누르면 다시 input field로 전환
-  };
-
-  // 다음 페이지로 이동하는 함수
   const handleNextButton = () => {
-    const selectedDRString = selectedDR.join(', '); // 배열을 문자열로 변환
+    const selectedDRString = selectedDR.join(', ');
     console.log(selectedDRString);
+    // 다음 페이지로 이동 로직
   };
 
   return (
@@ -136,7 +151,7 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
               <Text style={styles.optionText}>{option}</Text>
             </TouchableOpacity>
 
-            {/* 하위 항목들: 각 항목 선택 시 표시 (가로 정렬) */}
+            {/* 하위 항목들 */}
             {subOptionsMap[option] && showSubOptions[option] && (
               <View style={styles.subOptionsRow}>
                 {subOptionsMap[option].map(subOption => (
@@ -159,7 +174,7 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
               </View>
             )}
 
-            {/* Other 선택 시 input field 또는 텍스트 표시 */}
+            {/* Other 항목 처리 */}
             {option === 'Other' && showOtherInput && (
               <View style={styles.otherInputContainer}>
                 {isEditingOther ? (
@@ -175,7 +190,10 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
                 ) : (
                   <>
                     <Text style={styles.otherText}>{otherText}</Text>
-                    <Button title="Edit" onPress={handleEditOther} />
+                    <Button
+                      title="Edit"
+                      onPress={() => setIsEditingOther(true)}
+                    />
                   </>
                 )}
               </View>
@@ -183,7 +201,6 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
           </View>
         ))}
 
-        {/* 하단 페이지 번호 및 이동 버튼 (중앙 정렬) */}
         <View style={styles.navigationContainer}>
           <TouchableOpacity
             style={styles.navBtn}
@@ -206,7 +223,7 @@ function DRSecondScreen({navigation}: DRSecondScreenProps) {
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    flexGrow: 1, // ScrollView의 내용이 화면에 꽉 차도록 설정
+    flexGrow: 1,
   },
   container: {
     flex: 1,
@@ -214,20 +231,15 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   optionWrapper: {
-    alignItems: 'flex-start',
-    backgroundColor: '#fff', // 배경색 추가
-    padding: 15, // 패딩 추가
-    marginVertical: 10, // 상하 간격
-    borderRadius: 10, // 둥근 테두리
-    shadowColor: '#000', // 그림자 색상
-    shadowOffset: {width: 0, height: 2}, // 그림자 오프셋
-    shadowOpacity: 0.3, // 그림자 불투명도
-    shadowRadius: 4, // 그림자 반경
-    elevation: 5, // Android 그림자 효과
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   optionContainer: {
     flexDirection: 'row',
@@ -258,6 +270,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 10,
   },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
     height: 40,
     borderColor: 'gray',
@@ -270,7 +286,6 @@ const styles = StyleSheet.create({
   otherText: {
     fontSize: 16,
     marginVertical: 10,
-    marginRight: 10,
   },
   navigationContainer: {
     flexDirection: 'row',
