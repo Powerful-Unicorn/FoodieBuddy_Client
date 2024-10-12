@@ -7,10 +7,14 @@ import {validateLogin} from '../../utils';
 import {authNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
+import api from '../../apis/api';
+import axios from 'axios';
+import {useDispatch} from 'react-redux';
+import {setUserId} from '../../states/userSlice'; // Redux 액션 가져오기
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,
-  typeof authNavigations.ONBOARDING
+  typeof authNavigations.LOGIN
 >;
 
 function LoginScreen({navigation}: LoginScreenProps) {
@@ -20,45 +24,40 @@ function LoginScreen({navigation}: LoginScreenProps) {
     validate: validateLogin,
   });
 
-  // API 호출 함수 정의
+  const dispatch = useDispatch(); // Redux dispatch 함수 가져오기
+
   const handleSignup = async () => {
-    const url = 'https://api.foodiebuddy.kro.kr/user/signup';
     const requestBody = {
       email: login.values.email,
       password: login.values.password,
     };
 
-    console.log('Request Body:', requestBody); // 요청 데이터 확인
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // JSON 형식으로 데이터 전송
-        },
-        body: JSON.stringify(requestBody), // 이메일과 비밀번호를 JSON 형식으로 변환
-      });
-      console.log('Response Status:', response.status); // 응답 상태 코드 확인
-      console.log('Response Status Text:', response.statusText); // 상태 텍스트 로그 추가
-
-      if (response.ok) {
-        const data = await response.json(); // 서버로부터 받은 응답을 JSON으로 변환
-        console.log('Response Data:', data);
-        Alert.alert('Success', 'User registered successfully!');
-        navigation.navigate(authNavigations.DRFIRST); // 성공 시 다음 화면으로 이동
-      } else {
-        const errorData = await response.json();
-        console.log('Error Data:', errorData);
-        Alert.alert('Error', errorData.message || 'Something went wrong');
-      }
+      const response = await api.post('/user/signup', requestBody);
+      console.log('Response Data:', response.data);
+      dispatch(setUserId(response.data.userId)); // userId를 Redux 상태에 저장
+      Alert.alert('Success', 'User registered successfully!');
+      navigation.navigate(authNavigations.DRFIRST);
     } catch (error) {
-      Alert.alert('Error', 'Failed to sign up');
-      console.error('Signup error:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          console.log('Error Data:', error.response.data);
+          Alert.alert(
+            'Error',
+            error.response.data.message || 'Something went wrong',
+          );
+        } else {
+          Alert.alert('Error', 'Failed to sign up');
+        }
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred');
+        console.error('Unexpected error:', error);
+      }
     }
   };
 
   const handleSubmit = () => {
-    console.log('values', login.values);
-    handleSignup(); // 로그인 시도 시 handleSignup 함수 호출
+    handleSignup();
   };
 
   return (
@@ -91,7 +90,6 @@ function LoginScreen({navigation}: LoginScreenProps) {
         variant="filled"
         size="large"
         onPress={handleSubmit}
-        //onPress={() => navigation.navigate(authNavigations.DRFIRST)}
       />
     </SafeAreaView>
   );

@@ -12,7 +12,7 @@ import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import {ScrollView} from 'react-native';
-
+import {mainNavigations} from '../../constants';
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
   typeof authNavigations.DRSECOND

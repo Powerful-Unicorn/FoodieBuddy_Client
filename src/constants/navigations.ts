@@ -12,9 +12,4 @@ const authNavigations = {
   DRSECOND: 'DrSecond',
 } as const;
 
-// const drNavigations = {
-//   DRFIRST: 'DrFirst',
-//   DRSECOND: 'DrSecond',
-// } as const;
-
 export {mainNavigations, authNavigations};

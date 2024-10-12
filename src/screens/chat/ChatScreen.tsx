@@ -1,176 +1,127 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
+import {View, FlatList, StyleSheet, Text, Image} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootState, AppDispatch} from '../../states/store';
+import MessageItem from '../../components/chat/MessageItem';
+import MessageInput from '../../components/chat/MessageInput';
 import {
-  Text,
-  StyleSheet,
-  View,
-  TextInput,
-  Image,
-  FlatList,
-  TouchableOpacity,
-} from 'react-native';
-import {RouteProp} from '@react-navigation/native'; // RouteProp 사용
-import {colors} from '../../constants/colors';
-import ImageInput from '../../components/ImageInput';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {MainDrawerParamList} from '../../navigations/drawer/MainDrawerNavigator';
-import {mainNavigations} from '../../constants';
-import ChatbotInstruction from '../../components/ChatbotInstruction';
+  WEBSOCKET_CONNECT,
+  WEBSOCKET_MESSAGE,
+  WEBSOCKET_DISCONNECT,
+} from '../../webSocket/websocketActionTypes';
 
-interface Message {
-  id: string;
-  text?: string;
-  imageUri?: string;
-  sentByUser?: boolean;
-  buttons?: string[];
-}
-
-// ChatScreen의 route 타입을 명시
-type ChatScreenRouteProp = RouteProp<
-  MainDrawerParamList,
-  typeof mainNavigations.CHAT
->;
-
-interface ChatScreenProps {
-  route: ChatScreenRouteProp;
-}
-
-function ChatScreen({route}: ChatScreenProps) {
-  const {showInstruction = false} = route.params || {};
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState<string>('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  // "+" 버튼 클릭 시 챗봇 instruction 메시지 추가
-  const addInstructionMessage = () => {
-    const instructionMessage: Message = {
-      id: Date.now().toString(),
-      buttons: [
-        'Food Recommendation',
-        'Upload Menu Photo',
-        'Upload Dish Photo',
-      ],
-      sentByUser: false,
-    };
-    setMessages(prevMessages => [...prevMessages, instructionMessage]);
-  };
+const ChatScreen: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const {isConnected, messages} = useSelector(
+    (state: RootState) => state.websocket,
+  );
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (showInstruction) {
-      addInstructionMessage(); // "+" 버튼 클릭 시 메시지 추가
-    }
-  }, [showInstruction]);
+    // WebSocket 연결 설정
+    wsRef.current = new WebSocket(
+      'ws://api.foodiebuddy.kro.kr:8000/recommendation',
+    );
+    // WebSocket이 바이너리 데이터를 Blob 형식으로 처리하도록 설정
+    wsRef.current.binaryType = 'blob';
 
-  // 메시지 전송
-  const sendMessage = () => {
-    if (inputMessage.trim() || selectedImage) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: inputMessage,
-        imageUri: selectedImage || undefined,
-        sentByUser: true,
-      };
-      setMessages(prevMessages => [...prevMessages, newMessage]);
-      setInputMessage('');
-      setSelectedImage(null);
-    }
-  };
+    wsRef.current.onopen = () => {
+      console.log('WebSocket connected');
+      dispatch({type: WEBSOCKET_CONNECT});
+    };
 
-  // 이미지 선택 콜백 함수
-  const handleImageInput = () => {
-    console.log('ImageInput 클릭됨');
-  };
+    // WebSocket에서 수신한 메시지 처리
+    wsRef.current.onmessage = async event => {
+      console.log('WebSocket message received (type): ', typeof event.data);
+      console.log('WebSocket message received (data): ', event.data);
 
-  // 메시지 렌더링
-  const renderItem = ({item}: {item: Message}) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.sentByUser ? styles.sentMessage : styles.receivedMessage,
-      ]}>
-      {item.imageUri ? (
-        <Image source={{uri: item.imageUri}} style={styles.image} />
-      ) : null}
-      {item.text ? <Text style={styles.messageText}>{item.text}</Text> : null}
-      {item.buttons ? <ChatbotInstruction buttons={item.buttons} /> : null}
-      {/* 버튼 메시지 컴포넌트 사용 */}
-    </View>
-  );
+      if (typeof event.data === 'string') {
+        // 텍스트 메시지 처리
+        const parsedMessage = {
+          text: event.data,
+          sentByUser: false, // 상대방이 보낸 메시지로 가정
+        };
+        dispatch({type: WEBSOCKET_MESSAGE, payload: parsedMessage});
+      } else if (event.data instanceof Blob) {
+        // Blob 데이터를 URL로 변환하여 이미지 렌더링
+        const imageUrl = URL.createObjectURL(event.data);
+        const imageMessage = {
+          imageUri: imageUrl,
+          sentByUser: false,
+        };
+        dispatch({type: WEBSOCKET_MESSAGE, payload: imageMessage});
+      }
+    };
+
+    wsRef.current.onclose = () => {
+      console.log('WebSocket disconnected');
+      dispatch({type: WEBSOCKET_DISCONNECT});
+    };
+
+    // Cleanup on unmount
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [dispatch]);
 
   return (
     <View style={styles.container}>
+      {!isConnected && (
+        <Text style={styles.statusText}>Connecting to WebSocket...</Text>
+      )}
+
       <FlatList
         data={messages}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
+        renderItem={({item}) =>
+          item.imageUri ? (
+            <Image source={{uri: item.imageUri}} style={styles.image} />
+          ) : (
+            <MessageItem item={item} />
+          )
+        }
+        keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={styles.flatListContent}
       />
 
-      {selectedImage ? (
-        <Image
-          source={{uri: selectedImage}}
-          style={{width: 100, height: 100, marginBottom: 10}}
-        />
-      ) : null}
+      <MessageInput
+        onSend={message => {
+          console.log('Message to send:', message);
+          wsRef.current?.send(message); // WebSocket을 통해 메시지 전송
 
-      <View style={styles.inputContainer}>
-        <ImageInput onChange={handleImageInput} />
+          // 내가 보낸 메시지를 바로 화면에 표시
+          const sentMessage = {
+            text: message,
+            sentByUser: true,
+          };
 
-        <TextInput
-          style={styles.textInput}
-          placeholder="Ask me anything"
-          value={inputMessage}
-          onChangeText={setInputMessage}
-        />
-        <TouchableOpacity onPress={sendMessage} style={{marginLeft: 10}}>
-          <MaterialIcons name="send" size={28} color={colors.GRAY_500} />
-        </TouchableOpacity>
-      </View>
+          dispatch({type: WEBSOCKET_MESSAGE, payload: sentMessage});
+        }}
+      />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
   },
+  statusText: {
+    textAlign: 'center',
+    marginVertical: 10,
+    color: 'gray',
+  },
   flatListContent: {
     flexGrow: 1,
-    justifyContent: 'flex-start', // 메시지가 위에서부터 쌓임
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  textInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 20,
-  },
-  messageContainer: {
-    marginVertical: 10,
-    padding: 10,
-    borderRadius: 10,
-    maxWidth: '70%',
-  },
-  sentMessage: {
-    backgroundColor: '#d1f7c4',
-    alignSelf: 'flex-end',
-  },
-  receivedMessage: {
-    backgroundColor: '#f1f1f1',
-    alignSelf: 'flex-start',
-  },
-  messageText: {
-    fontSize: 16,
+    justifyContent: 'flex-start',
   },
   image: {
     width: 200,
     height: 200,
-    borderRadius: 10,
-    marginBottom: 5,
+    marginVertical: 10,
+    alignSelf: 'center',
   },
 });
 
