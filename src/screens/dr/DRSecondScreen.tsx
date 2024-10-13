@@ -10,11 +10,14 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {authNavigations, colors} from '../../constants';
+import {authNavigations, colors, mainNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api'; // API 요청을 위한 모듈
 import {useSelector} from 'react-redux'; // Redux 상태 선택자를 가져오기
+import {CommonActions} from '@react-navigation/native';
+import {login} from '../../states/authSlice';
+import {useDispatch} from 'react-redux';
 
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -57,6 +60,8 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
   const [otherText, setOtherText] = useState(dietRestrictions.other || '');
   const [isEditingOther, setIsEditingOther] = useState(true);
   const userId = useSelector((state: any) => state.user.userId);
+  const dispatch = useDispatch();
+
   // dietRestrictions에 따라 초기값 설정
   useEffect(() => {
     const initialSelectedOptions: string[] = [];
@@ -185,7 +190,25 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
         headers: {'Content-Type': 'application/json'},
       });
       console.log('Full Response Data:', response.data);
-      Alert.alert('Response Data', JSON.stringify(response.data, null, 2));
+
+      // 응답 데이터 알림창을 띄우고, 확인을 누르면 ChatScreen으로 이동
+      Alert.alert('Response Data', JSON.stringify(response.data, null, 2), [
+        {
+          text: 'OK',
+          onPress: () => {
+            // 로그인 상태로 변경
+            dispatch(login());
+
+            // MainDrawerNavigator의 ChatScreen으로 이동
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: 'MainDrawer'}],
+              }),
+            );
+          },
+        },
+      ]);
     } catch (error) {
       console.error('Error occurred:', error);
       Alert.alert('Error', 'Failed to send data');

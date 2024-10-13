@@ -14,9 +14,8 @@ export type AuthStackParamList = {
   [authNavigations.SIGNUP]: undefined;
   [authNavigations.DRFIRST]: undefined;
   [authNavigations.DRSECOND]: {
-    selectedDR: string; // Keep the selectedDR parameter
+    selectedDR: string;
     dietRestrictions: {
-      // Add dietRestrictions parameter
       meat: string;
       egg: boolean;
       dairy: string;
@@ -63,10 +62,8 @@ function AuthStackNavigator() {
         component={DRSecondScreen}
         options={{
           headerTitle: 'Ingredients you should avoid',
-
           headerLeft: () => null,
           headerStyle: {
-            //backgroundColor: colors.GRAY_200,
             borderBottomColor: colors.ORANGE_200,
             borderBottomWidth: 3,
           },
