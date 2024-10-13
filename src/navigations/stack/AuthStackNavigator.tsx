@@ -3,7 +3,7 @@ import React from 'react';
 import {StyleSheet} from 'react-native';
 import OnboardingScreen from '../../screens/auth/OnboardingScreen';
 import LoginScreen from '../../screens/auth/LoginScreen';
-import {authNavigations} from '../../constants';
+import {authNavigations, colors} from '../../constants';
 import SignupScreen from '../../screens/auth/SignupScreen';
 import DRFirstScreen from '../../screens/dr/DRFirstScreen';
 import DRSecondScreen from '../../screens/dr/DRSecondScreen';
@@ -46,10 +46,31 @@ function AuthStackNavigator() {
       />
       <Stack.Screen name={authNavigations.LOGIN} component={LoginScreen} />
       <Stack.Screen name={authNavigations.SIGNUP} component={SignupScreen} />
-      <Stack.Screen name={authNavigations.DRFIRST} component={DRFirstScreen} />
+      <Stack.Screen
+        name={authNavigations.DRFIRST}
+        component={DRFirstScreen}
+        options={{
+          headerTitle: 'Dietary Restriction',
+          headerLeft: () => null,
+          headerStyle: {
+            borderBottomColor: colors.ORANGE_200,
+            borderBottomWidth: 3,
+          },
+        }}
+      />
       <Stack.Screen
         name={authNavigations.DRSECOND}
         component={DRSecondScreen}
+        options={{
+          headerTitle: 'Ingredients you should avoid',
+
+          headerLeft: () => null,
+          headerStyle: {
+            //backgroundColor: colors.GRAY_200,
+            borderBottomColor: colors.ORANGE_200,
+            borderBottomWidth: 3,
+          },
+        }}
       />
     </Stack.Navigator>
   );

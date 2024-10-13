@@ -7,11 +7,14 @@ import {
   TextInput,
   Button,
   ScrollView,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {authNavigations, colors, mainNavigations} from '../../constants';
+import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
+import api from '../../apis/api'; // API 요청을 위한 모듈
+import {useSelector} from 'react-redux'; // Redux 상태 선택자를 가져오기
 
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -40,8 +43,8 @@ const subOptionsMap: {[key: string]: string[]} = {
 };
 
 function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
-  const {dietRestrictions} = route.params;
-  const [selectedDR, setSelectedDR] = useState<string[]>([]);
+  const {dietRestrictions, selectedDR} = route.params; // 이전 화면에서 받아온 데이터
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [showSubOptions, setShowSubOptions] = useState<{
     [key: string]: boolean;
   }>({
@@ -53,32 +56,32 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [otherText, setOtherText] = useState(dietRestrictions.other || '');
   const [isEditingOther, setIsEditingOther] = useState(true);
-
+  const userId = useSelector((state: any) => state.user.userId);
   // dietRestrictions에 따라 초기값 설정
   useEffect(() => {
-    const initialSelectedDR: string[] = [];
+    const initialSelectedOptions: string[] = [];
 
     // Meat 처리: "all kinds"라면 하위 항목 모두 포함
     if (dietRestrictions.meat === 'all kinds') {
-      initialSelectedDR.push('Meat', ...subOptionsMap['Meat']);
+      initialSelectedOptions.push('Meat', ...subOptionsMap['Meat']);
       setShowSubOptions(prev => ({...prev, Meat: true}));
     }
 
     // Egg, Dairy, Seafood, 기타 항목 처리
-    if (dietRestrictions.egg === true) initialSelectedDR.push('Egg');
-    if (dietRestrictions.dairy) initialSelectedDR.push('Dairy');
-    if (dietRestrictions.seafood) initialSelectedDR.push('Seafood');
-    if (dietRestrictions.nuts) initialSelectedDR.push('Nuts');
-    if (dietRestrictions.gluten === true) initialSelectedDR.push('Gluten');
-    if (dietRestrictions.fruit) initialSelectedDR.push('Fruits');
-    if (dietRestrictions.vegetable) initialSelectedDR.push('Vegetables');
+    if (dietRestrictions.egg === true) initialSelectedOptions.push('Egg');
+    if (dietRestrictions.dairy) initialSelectedOptions.push('Dairy');
+    if (dietRestrictions.seafood) initialSelectedOptions.push('Seafood');
+    if (dietRestrictions.nuts) initialSelectedOptions.push('Nuts');
+    if (dietRestrictions.gluten === true) initialSelectedOptions.push('Gluten');
+    if (dietRestrictions.fruit) initialSelectedOptions.push('Fruits');
+    if (dietRestrictions.vegetable) initialSelectedOptions.push('Vegetables');
     if (dietRestrictions.other) {
-      initialSelectedDR.push('Other');
+      initialSelectedOptions.push('Other');
       setShowOtherInput(true);
       setIsEditingOther(false);
     }
 
-    setSelectedDR(initialSelectedDR);
+    setSelectedOptions(initialSelectedOptions);
   }, [dietRestrictions]);
 
   // 항목 선택 핸들러
@@ -86,50 +89,107 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
     const subOptions = subOptionsMap[option] || [];
 
     if (subOptions.length > 0) {
-      if (selectedDR.includes(option)) {
-        setSelectedDR(
-          selectedDR.filter(item => ![option, ...subOptions].includes(item)),
+      if (selectedOptions.includes(option)) {
+        setSelectedOptions(
+          selectedOptions.filter(
+            item => ![option, ...subOptions].includes(item),
+          ),
         );
         setShowSubOptions({...showSubOptions, [option]: false});
       } else {
-        setSelectedDR([...selectedDR, option, ...subOptions]);
+        setSelectedOptions([...selectedOptions, option, ...subOptions]);
         setShowSubOptions({...showSubOptions, [option]: true});
       }
     } else if (option === 'Other') {
-      if (selectedDR.includes('Other')) {
-        setSelectedDR(selectedDR.filter(item => item !== 'Other'));
+      if (selectedOptions.includes('Other')) {
+        setSelectedOptions(selectedOptions.filter(item => item !== 'Other'));
         setShowOtherInput(false);
         setOtherText('');
       } else {
-        setSelectedDR([...selectedDR, option]);
+        setSelectedOptions([...selectedOptions, option]);
         setShowOtherInput(true);
         setIsEditingOther(true);
       }
     } else {
-      if (selectedDR.includes(option)) {
-        setSelectedDR(selectedDR.filter(item => item !== option));
+      if (selectedOptions.includes(option)) {
+        setSelectedOptions(selectedOptions.filter(item => item !== option));
       } else {
-        setSelectedDR([...selectedDR, option]);
+        setSelectedOptions([...selectedOptions, option]);
       }
     }
   };
 
   const handleSubSelection = (option: string, subOption: string) => {
-    if (selectedDR.includes(subOption)) {
-      setSelectedDR(selectedDR.filter(item => item !== subOption));
+    if (selectedOptions.includes(subOption)) {
+      setSelectedOptions(selectedOptions.filter(item => item !== subOption));
     } else {
-      setSelectedDR([...selectedDR, subOption]);
+      setSelectedOptions([...selectedOptions, subOption]);
     }
+  };
+
+  // API로 요청 보낼 데이터 조합
+  const createRequestBody = () => {
+    const body: any = {
+      meat: selectedOptions.includes('Meat')
+        ? dietRestrictions.meat === 'all kinds'
+          ? 'all kinds'
+          : selectedOptions
+              .filter(item => subOptionsMap['Meat'].includes(item))
+              .join(', ')
+        : '',
+      egg: selectedOptions.includes('Egg'),
+      dairy: selectedOptions.includes('Dairy')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Dairy'].includes(item))
+            .join(', ')
+        : '',
+      seafood: selectedOptions.includes('Seafood')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Seafood'].includes(item))
+            .join(', ')
+        : '',
+      nut: selectedOptions.includes('Nuts')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Nuts'].includes(item))
+            .join(', ')
+        : '',
+      gluten: selectedOptions.includes('Gluten'),
+      fruit: selectedOptions.includes('Fruits')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Fruits'].includes(item))
+            .join(', ')
+        : '',
+      vegetable: selectedOptions.includes('Vegetables')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Vegetables'].includes(item))
+            .join(', ')
+        : '',
+      other: otherText,
+      userId: userId,
+    };
+
+    return body;
   };
 
   const handleSubmitOther = () => {
     setIsEditingOther(false);
   };
 
-  const handleNextButton = () => {
-    const selectedDRString = selectedDR.join(', ');
-    console.log(selectedDRString);
-    // 다음 페이지로 이동 로직
+  // 다음 페이지로 이동하는 함수
+  const handleNextButton = async () => {
+    const requestBody = createRequestBody();
+    console.log('Request Body: ', requestBody);
+
+    try {
+      const response = await api.put('/user/dr2', requestBody, {
+        headers: {'Content-Type': 'application/json'},
+      });
+      console.log('Full Response Data:', response.data);
+      Alert.alert('Response Data', JSON.stringify(response.data, null, 2));
+    } catch (error) {
+      console.error('Error occurred:', error);
+      Alert.alert('Error', 'Failed to send data');
+    }
   };
 
   return (
@@ -137,13 +197,14 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
       <View style={styles.container}>
         {ingredientOptions.map(option => (
           <View key={option} style={styles.optionWrapper}>
-            {/* 메인 옵션 */}
             <TouchableOpacity
               style={styles.optionContainer}
               onPress={() => handleSelection(option)}>
               <Ionicons
                 name={
-                  selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'
+                  selectedOptions.includes(option)
+                    ? 'checkbox'
+                    : 'checkbox-outline'
                 }
                 size={24}
                 color={colors.ORANGE_800}
@@ -151,7 +212,6 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
               <Text style={styles.optionText}>{option}</Text>
             </TouchableOpacity>
 
-            {/* 하위 항목들 */}
             {subOptionsMap[option] && showSubOptions[option] && (
               <View style={styles.subOptionsRow}>
                 {subOptionsMap[option].map(subOption => (
@@ -161,7 +221,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
                     onPress={() => handleSubSelection(option, subOption)}>
                     <Ionicons
                       name={
-                        selectedDR.includes(subOption)
+                        selectedOptions.includes(subOption)
                           ? 'checkbox'
                           : 'checkbox-outline'
                       }
@@ -174,7 +234,6 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
               </View>
             )}
 
-            {/* Other 항목 처리 */}
             {option === 'Other' && showOtherInput && (
               <View style={styles.otherInputContainer}>
                 {isEditingOther ? (
