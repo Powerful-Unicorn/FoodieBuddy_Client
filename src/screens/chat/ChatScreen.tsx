@@ -1,28 +1,35 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {View, FlatList, StyleSheet, Text, Image} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState, AppDispatch} from '../../states/store';
 import MessageItem from '../../components/chat/MessageItem';
 import MessageInput from '../../components/chat/MessageInput';
+import ChatbotInstruction from '../../components/chat/ChatbotInstruction';
 import {
   WEBSOCKET_CONNECT,
   WEBSOCKET_MESSAGE,
   WEBSOCKET_DISCONNECT,
 } from '../../webSocket/websocketActionTypes';
+import {RouteProp} from '@react-navigation/native';
+import {MainDrawerParamList} from '../../navigations/drawer/MainDrawerNavigator';
 
-const ChatScreen: React.FC = () => {
+interface ChatScreenProps {
+  route: RouteProp<MainDrawerParamList, 'Chat'>;
+}
+
+const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
   const dispatch: AppDispatch = useDispatch();
   const {isConnected, messages} = useSelector(
     (state: RootState) => state.websocket,
   );
   const wsRef = useRef<WebSocket | null>(null);
+  const [showBotResponse, setShowBotResponse] = useState(false);
 
   useEffect(() => {
     // WebSocket 연결 설정
     wsRef.current = new WebSocket(
       'ws://api.foodiebuddy.kro.kr:8000/recommendation',
     );
-    // WebSocket이 바이너리 데이터를 Blob 형식으로 처리하도록 설정
     wsRef.current.binaryType = 'blob';
 
     wsRef.current.onopen = () => {
@@ -30,20 +37,17 @@ const ChatScreen: React.FC = () => {
       dispatch({type: WEBSOCKET_CONNECT});
     };
 
-    // WebSocket에서 수신한 메시지 처리
     wsRef.current.onmessage = async event => {
       console.log('WebSocket message received (type): ', typeof event.data);
       console.log('WebSocket message received (data): ', event.data);
 
-      if (typeof event.data === 'string') {
-        // 텍스트 메시지 처리
+      if (showBotResponse && typeof event.data === 'string') {
         const parsedMessage = {
           text: event.data,
-          sentByUser: false, // 상대방이 보낸 메시지로 가정
+          sentByUser: false,
         };
         dispatch({type: WEBSOCKET_MESSAGE, payload: parsedMessage});
-      } else if (event.data instanceof Blob) {
-        // Blob 데이터를 URL로 변환하여 이미지 렌더링
+      } else if (showBotResponse && event.data instanceof Blob) {
         const imageUrl = URL.createObjectURL(event.data);
         const imageMessage = {
           imageUri: imageUrl,
@@ -58,25 +62,62 @@ const ChatScreen: React.FC = () => {
       dispatch({type: WEBSOCKET_DISCONNECT});
     };
 
-    // Cleanup on unmount
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
       }
     };
-  }, [dispatch]);
+  }, [dispatch, showBotResponse]);
+
+  // 처음 화면에 접속할 때 메시지가 한 번만 추가
+  useEffect(() => {
+    if (messages.length === 0) {
+      addInstructionMessage(); // 메시지가 없을 때만 추가
+    }
+  }, [messages]);
+
+  // "+" 버튼을 눌렀을 때 메시지 추가
+  useEffect(() => {
+    if (route.params?.showInstruction) {
+      addInstructionMessage();
+    }
+  }, [route.params?.showInstruction]);
+
+  const addInstructionMessage = () => {
+    const instructionMessage = {
+      id: Date.now().toString(),
+      buttons: [
+        'Food Recommendation',
+        'Upload Menu Photo',
+        'Upload Dish Photo',
+      ],
+      sentByUser: false,
+    };
+    dispatch({type: WEBSOCKET_MESSAGE, payload: instructionMessage});
+  };
+
+  const handleInstructionButtonPress = (button: string) => {
+    if (button === 'Food Recommendation') {
+      setShowBotResponse(true); // Food Recommendation 버튼을 눌렀을 때만 메시지 받기
+    }
+    console.log(`${button} 버튼이 클릭됨`);
+    // 각 버튼 클릭 시 다른 로직 추가 가능
+  };
 
   return (
     <View style={styles.container}>
-      {!isConnected && (
-        <Text style={styles.statusText}>Connecting to WebSocket...</Text>
-      )}
+      {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
 
       <FlatList
         data={messages}
         renderItem={({item}) =>
           item.imageUri ? (
             <Image source={{uri: item.imageUri}} style={styles.image} />
+          ) : item.buttons ? (
+            <ChatbotInstruction
+              buttons={item.buttons}
+              onButtonPress={handleInstructionButtonPress} // onButtonPress 전달
+            />
           ) : (
             <MessageItem item={item} />
           )
@@ -88,9 +129,8 @@ const ChatScreen: React.FC = () => {
       <MessageInput
         onSend={message => {
           console.log('Message to send:', message);
-          wsRef.current?.send(message); // WebSocket을 통해 메시지 전송
+          wsRef.current?.send(message);
 
-          // 내가 보낸 메시지를 바로 화면에 표시
           const sentMessage = {
             text: message,
             sentByUser: true,

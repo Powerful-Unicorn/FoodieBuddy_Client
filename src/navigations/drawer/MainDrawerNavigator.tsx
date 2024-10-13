@@ -70,10 +70,7 @@ function MainDrawerNavigator() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate(mainNavigations.CHAT, {
-                  showInstruction: true,
-                });
-                console.log('Plus icon pressed');
+                navigation.setParams({showInstruction: true});
               }}
               style={{marginRight: 15}}>
               <MaterialIcons name="add" size={28} color={colors.ORANGE_800} />
