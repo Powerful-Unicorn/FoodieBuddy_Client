@@ -1,5 +1,12 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {View, FlatList, StyleSheet, Text, Image} from 'react-native';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Text,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState, AppDispatch} from '../../states/store';
 import MessageItem from '../../components/chat/MessageItem';
@@ -24,6 +31,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
   );
   const wsRef = useRef<WebSocket | null>(null);
   const [showBotResponse, setShowBotResponse] = useState(false);
+  const [loading, setLoading] = useState(false); // 로딩 상태 추가
 
   useEffect(() => {
     // WebSocket 연결 설정
@@ -40,6 +48,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
     wsRef.current.onmessage = async event => {
       console.log('WebSocket message received (type): ', typeof event.data);
       console.log('WebSocket message received (data): ', event.data);
+
+      // 응답을 받았으므로 로딩 상태를 false로 설정
+      setLoading(false);
 
       if (showBotResponse && typeof event.data === 'string') {
         const parsedMessage = {
@@ -98,7 +109,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
 
   const handleInstructionButtonPress = (button: string) => {
     if (button === 'Food Recommendation') {
-      setShowBotResponse(true); // Food Recommendation 버튼을 눌렀을 때만 메시지 받기
+      setShowBotResponse(true);
+      setLoading(true); // 로딩 시작
     }
     console.log(`${button} 버튼이 클릭됨`);
     // 각 버튼 클릭 시 다른 로직 추가 가능
@@ -126,9 +138,21 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
         contentContainerStyle={styles.flatListContent}
       />
 
+      {/* 로딩 상태일 때 "Generating response" 메시지 표시 */}
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>Generating response...</Text>
+        </View>
+      )}
+
       <MessageInput
         onSend={message => {
           console.log('Message to send:', message);
+
+          // 사용자가 메시지를 보냈으므로 로딩 상태로 전환
+          setLoading(true);
+
           wsRef.current?.send(message);
 
           const sentMessage = {
@@ -162,6 +186,16 @@ const styles = StyleSheet.create({
     height: 200,
     marginVertical: 10,
     alignSelf: 'center',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: 'gray',
   },
 });
 
