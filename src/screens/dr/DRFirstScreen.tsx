@@ -63,22 +63,24 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
 
       console.log('Request Body:', requestBody);
       console.log('Full Response Data:', response.data);
-
+      const {religion, vegetarian} = requestBody;
       const {meat, egg, dairy, seafood, nut, gluten, fruit, vegetable, other} =
         response.data;
 
       // Alert로 받은 응답 내용을 보여줌
       Alert.alert(
-        'Diet Preferences',
-        `Meat: ${meat || 'all kinds'}, 
-  Egg: ${egg === false ? 'false' : 'true'}, 
-  Dairy: ${dairy || ''}, 
-  Seafood: ${seafood || ''}, 
-  Nut: ${nut || ''}, 
-  Gluten: ${gluten === false ? 'false' : 'true'}, 
-  Fruit: ${fruit || ''}, 
-  Vegetable: ${vegetable || ''}, 
-  Other: ${other || ''}`,
+        'Your dietary restriciton',
+        vegetarian || religion,
+
+        //       `Meat: ${meat || 'all kinds'},
+        // Egg: ${egg === false ? 'false' : 'true'},
+        // Dairy: ${dairy || ''},
+        // Seafood: ${seafood || ''},
+        // Nut: ${nut || ''},
+        // Gluten: ${gluten === false ? 'false' : 'true'},
+        // Fruit: ${fruit || ''},
+        // Vegetable: ${vegetable || ''},
+        // Other: ${other || ''}`,
       );
 
       // 다음 페이지로 이동하고 응답 데이터를 전달

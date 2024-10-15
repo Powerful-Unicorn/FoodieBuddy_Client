@@ -191,24 +191,38 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
       });
       console.log('Full Response Data:', response.data);
 
-      // 응답 데이터 알림창을 띄우고, 확인을 누르면 ChatScreen으로 이동
-      Alert.alert('Response Data', JSON.stringify(response.data, null, 2), [
-        {
-          text: 'OK',
-          onPress: () => {
-            // 로그인 상태로 변경
-            dispatch(login());
+      const filteredResponseData: {[key: string]: any} = {};
 
-            // MainDrawerNavigator의 ChatScreen으로 이동
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{name: 'MainDrawer'}],
-              }),
-            );
+      Object.entries(response.data)
+        .filter(
+          ([key, value]) => value !== null && value !== '' && value !== false,
+        )
+        .forEach(([key, value]) => {
+          filteredResponseData[key] = value;
+        });
+      console.log('출력:', filteredResponseData);
+      // 응답 데이터 알림창을 띄우고, 확인을 누르면 ChatScreen으로 이동
+      Alert.alert(
+        'Ingredients you cannot eat',
+        JSON.stringify(filteredResponseData, null, 2),
+        [
+          {
+            text: 'Start Foodie Buddy',
+            onPress: () => {
+              // 로그인 상태로 변경
+              dispatch(login());
+
+              // MainDrawerNavigator의 ChatScreen으로 이동
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: 'MainDrawer'}],
+                }),
+              );
+            },
           },
-        },
-      ]);
+        ],
+      );
     } catch (error) {
       console.error('Error occurred:', error);
       Alert.alert('Error', 'Failed to send data');
