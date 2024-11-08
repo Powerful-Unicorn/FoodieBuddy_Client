@@ -21,7 +21,6 @@ type DRFirstScreenProps = StackScreenProps<
 >;
 
 const dietaryOptions = [
-  'Kosher',
   'Halal',
   'Hindu',
   'Buddist',

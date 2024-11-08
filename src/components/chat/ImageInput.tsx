@@ -1,48 +1,40 @@
+// ImageInput.tsx
 import React from 'react';
-import {Pressable, StyleSheet, Text} from 'react-native';
+import {TouchableOpacity, Image, StyleSheet} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {colors} from '../../constants';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 interface ImageInputProps {
-  onChange: (imageUri: string) => void; // string 타입을 받는 onChange로 수정
+  onChange: (imageUri: string) => void;
 }
 
 function ImageInput({onChange}: ImageInputProps) {
-  const handleImageSelect = () => {
-    const selectedImageUri = 'selected-image-uri'; // 실제 이미지를 선택하면 여기서 URI를 얻어옴
-    onChange(selectedImageUri); // 상위 컴포넌트로 이미지 URI를 전달
+  const handleSelectImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.8,
+    });
+
+    if (result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      if (uri) {
+        onChange(uri); // 선택한 이미지 URI를 부모 컴포넌트로 전달
+      }
+    }
   };
 
   return (
-    <Pressable
-      style={({pressed}) => [
-        pressed && styles.imageInputPressed,
-        styles.imageInput,
-      ]}
-      onPress={handleImageSelect} // 이미지 선택 시 handleImageSelect 호출
-    >
-      <MaterialIcons
-        name="photo-size-select-actual"
-        size={28}
-        color={colors.GRAY_500}
-      />
-    </Pressable>
+    <TouchableOpacity onPress={handleSelectImage} style={styles.imageButton}>
+      <MaterialIcons name="photo" size={30} color="gray" />
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  imageInput: {
-    width: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-  },
-  imageInputPressed: {
-    opacity: 0.5,
-  },
-  inputText: {
-    fontSize: 12,
-    color: colors.GRAY_500,
+  imageButton: {
+    marginRight: 10,
   },
 });
 

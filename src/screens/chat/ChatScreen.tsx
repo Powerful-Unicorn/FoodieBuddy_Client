@@ -1,3 +1,4 @@
+// ChatScreen.tsx
 import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
@@ -31,7 +32,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
   );
   const wsRef = useRef<WebSocket | null>(null);
   const [showBotResponse, setShowBotResponse] = useState(false);
-  const [loading, setLoading] = useState(false); // 로딩 상태 추가
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // WebSocket 연결 설정
@@ -49,7 +50,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
       console.log('WebSocket message received (type): ', typeof event.data);
       console.log('WebSocket message received (data): ', event.data);
 
-      // 응답을 받았으므로 로딩 상태를 false로 설정
       setLoading(false);
 
       if (showBotResponse && typeof event.data === 'string') {
@@ -83,7 +83,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
   // 처음 화면에 접속할 때 메시지가 한 번만 추가
   useEffect(() => {
     if (messages.length === 0) {
-      addInstructionMessage(); // 메시지가 없을 때만 추가
+      addInstructionMessage();
     }
   }, [messages]);
 
@@ -110,10 +110,37 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
   const handleInstructionButtonPress = (button: string) => {
     if (button === 'Food Recommendation') {
       setShowBotResponse(true);
-      setLoading(true); // 로딩 시작
+      setLoading(true);
     }
     console.log(`${button} 버튼이 클릭됨`);
-    // 각 버튼 클릭 시 다른 로직 추가 가능
+  };
+
+  const handleSendMessage = (message: string, imageUri: string | null) => {
+    setLoading(true);
+
+    if (imageUri) {
+      const payload = JSON.stringify({imageUri, text: message});
+      wsRef.current?.send(payload);
+
+      dispatch({
+        type: WEBSOCKET_MESSAGE,
+        payload: {
+          imageUri,
+          text: message,
+          sentByUser: true,
+        },
+      });
+    } else {
+      wsRef.current?.send(message);
+
+      dispatch({
+        type: WEBSOCKET_MESSAGE,
+        payload: {
+          text: message,
+          sentByUser: true,
+        },
+      });
+    }
   };
 
   return (
@@ -128,8 +155,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
           ) : item.buttons ? (
             <ChatbotInstruction
               buttons={item.buttons}
-              onButtonPress={handleInstructionButtonPress} // onButtonPress 전달
+              onButtonPress={handleInstructionButtonPress}
             />
+          ) : item.text ? (
+            <Text style={styles.messageText}>{item.text}</Text>
           ) : (
             <MessageItem item={item} />
           )
@@ -138,7 +167,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
         contentContainerStyle={styles.flatListContent}
       />
 
-      {/* 로딩 상태일 때 "Generating response" 메시지 표시 */}
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
@@ -147,21 +175,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({route}) => {
       )}
 
       <MessageInput
-        onSend={message => {
-          console.log('Message to send:', message);
-
-          // 사용자가 메시지를 보냈으므로 로딩 상태로 전환
-          setLoading(true);
-
-          wsRef.current?.send(message);
-
-          const sentMessage = {
-            text: message,
-            sentByUser: true,
-          };
-
-          dispatch({type: WEBSOCKET_MESSAGE, payload: sentMessage});
-        }}
+        onSend={(message, imageUri) => handleSendMessage(message, imageUri)}
       />
     </View>
   );
@@ -171,6 +185,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: 'white',
   },
   statusText: {
     textAlign: 'center',
@@ -196,6 +211,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: 'gray',
+  },
+  messageText: {
+    fontSize: 16,
+    color: 'black',
+    marginVertical: 5,
+    paddingHorizontal: 10,
   },
 });
 
