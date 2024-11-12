@@ -1,47 +1,57 @@
+// ChatbotInstruction.tsx
 import React from 'react';
-import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
-import {colors} from '../../constants';
+import {View, TouchableOpacity, Text, StyleSheet} from 'react-native';
 
 interface ChatbotInstructionProps {
-  buttons: string[];
-  onButtonPress: (button: string) => void; // onButtonPress prop 추가
+  onButtonPress: (url: string) => void;
 }
 
-const ChatbotInstruction = ({
-  buttons,
+const ChatbotInstruction: React.FC<ChatbotInstructionProps> = ({
   onButtonPress,
-}: ChatbotInstructionProps) => {
+}) => {
   return (
-    <View style={styles.buttonsContainer}>
-      {buttons.map(button => (
-        <TouchableOpacity
-          key={button}
-          style={styles.button}
-          onPress={() => onButtonPress(button)} // 버튼 클릭 시 onButtonPress 호출
-        >
-          <Text style={styles.buttonText}>{button}</Text>
-        </TouchableOpacity>
-      ))}
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() =>
+          onButtonPress('ws://api.foodiebuddy.kro.kr:8000/recommendation')
+        }>
+        <Text style={styles.buttonText}>Food Recommendation</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() =>
+          onButtonPress('ws://api.foodiebuddy.kro.kr:8000/askmenu')
+        }>
+        <Text style={styles.buttonText}>Upload Menu Photo</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() =>
+          onButtonPress('ws://api.foodiebuddy.kro.kr:8000/askdish')
+        }>
+        <Text style={styles.buttonText}>Upload Dish Photo</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  buttonsContainer: {
-    flexDirection: 'column',
+  container: {
     alignItems: 'center',
+    paddingVertical: 10,
   },
   button: {
-    backgroundColor: colors.ORANGE_800,
-    padding: 10,
-    borderRadius: 20,
-    marginVertical: 5,
-    alignItems: 'center',
-    width: 180,
+    backgroundColor: '#f27a57',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    marginBottom: 10,
   },
   buttonText: {
-    color: colors.WHITE,
+    color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

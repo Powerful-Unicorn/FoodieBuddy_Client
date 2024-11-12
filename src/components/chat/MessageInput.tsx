@@ -1,70 +1,103 @@
-// MessageInput.tsx
 import React, {useState} from 'react';
-import {View, TextInput, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  Text,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import ImageInput from './ImageInput';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {colors} from '../../constants';
 
 interface MessageInputProps {
   onSend: (message: string, imageUri: string | null) => void;
 }
 
-function MessageInput({onSend}: MessageInputProps) {
-  const [inputMessage, setInputMessage] = useState<string>('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
+  const [message, setMessage] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
-  const handleImageInput = (imageUri: string) => {
-    setSelectedImage(imageUri); // 선택한 이미지 URI 저장
-  };
-
-  const handleSendMessage = () => {
-    if (inputMessage.trim() || selectedImage) {
-      onSend(inputMessage.trim(), selectedImage); // 트리밍된 메시지와 이미지 URI 전송
-      setInputMessage(''); // 입력 필드 초기화
-      setSelectedImage(null); // 선택한 이미지 초기화
+  const handleSend = () => {
+    if (message.trim() || imageUri) {
+      onSend(message, imageUri);
+      setMessage('');
+      setImageUri(null);
     }
   };
 
+  const handleRemoveImage = () => {
+    setImageUri(null);
+  };
+
   return (
-    <View style={styles.inputContainer}>
-      <ImageInput onChange={handleImageInput} />
+    <View style={styles.container}>
+      {/* 이미지 선택 버튼 */}
+      <ImageInput onChange={uri => setImageUri(uri)} />
+
+      {/* 이미지 선택 시 미리보기와 삭제 버튼 */}
+      {imageUri && (
+        <View style={styles.previewContainer}>
+          <Image source={{uri: imageUri}} style={styles.imagePreview} />
+          <TouchableOpacity
+            onPress={handleRemoveImage}
+            style={styles.removeButton}>
+            <Text style={styles.removeButtonText}>X</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* 메시지 입력 필드 */}
       <TextInput
-        style={styles.textInput}
+        style={styles.input}
         placeholder="Ask me anything"
-        value={inputMessage}
-        onChangeText={setInputMessage}
+        value={message}
+        onChangeText={setMessage}
       />
-      <TouchableOpacity onPress={handleSendMessage} style={styles.sendButton}>
-        <MaterialIcons
-          name="send"
-          size={28}
-          color={colors?.GRAY_500 || '#aaa'} // colors가 없을 경우 기본 색상 설정
-        />
-      </TouchableOpacity>
+
+      {/* 전송 버튼 */}
+      <Button title="Send" onPress={handleSend} />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  inputContainer: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    //backgroundColor: '#f8f8f8',
+    marginBottom: 10,
   },
-  textInput: {
+  previewContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  imagePreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 5,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  input: {
     flex: 1,
+    borderColor: 'gray',
     borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
+    height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
-    marginHorizontal: 8,
-  },
-  sendButton: {
-    marginLeft: 10,
   },
 });
 
