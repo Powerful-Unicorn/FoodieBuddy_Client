@@ -5,13 +5,14 @@ import {
   StyleSheet,
   Text,
   Image,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../states/store';
 import MessageInput from '../../components/chat/MessageInput';
-import ChatbotInstruction from '../../components/chat/ChatbotInstruction';
 import {useWebSocket} from '../../webSocket/websocketHandler';
+import {colors} from '../../constants';
 
 // MessageItem 타입 정의
 type MessageItem = {
@@ -28,47 +29,39 @@ const ChatScreen: React.FC = () => {
 
   // 버튼 목록
   const buttons = [
-    'Menu recommendation',
-    'Upload menu photo',
-    'Upload dish photo',
+    {
+      icon: '❓',
+      text: 'Food Recommendation',
+      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/recommendation',
+    },
+    {
+      icon: '📋',
+      text: 'Explain Menu Board',
+      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askmenu',
+    },
+    {
+      icon: '🍳',
+      text: 'Explain Side Dish',
+      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askdish',
+    },
   ];
-
-  // 버튼 클릭 핸들러
-  const handleInstructionButtonPress = (button: string) => {
-    let apiUrl = '';
-
-    switch (button) {
-      case 'Menu recommendation':
-        apiUrl = 'ws://api.foodiebuddy.kro.kr:8000/recommendation'; // 웹소켓 API 1
-        break;
-      case 'Upload menu photo':
-        apiUrl = 'ws://api.foodiebuddy.kro.kr:8000/askmenu'; // 웹소켓 API 2
-        break;
-      case 'Upload dish photo':
-        apiUrl = 'ws://api.foodiebuddy.kro.kr:8000/askdish'; // 웹소켓 API 3
-        break;
-      default:
-        console.error('Unknown button action:', button);
-        return;
-    }
-
-    setCurrentUrl(apiUrl);
-    setLoading(true);
-  };
 
   const {isConnected, sendMessage} = useWebSocket(
     currentUrl || '',
     (data: any) => {
       setLoading(false);
-
       const parsedMessage: MessageItem =
         typeof data === 'string'
           ? {text: data, sentByUser: false}
           : {text: '', sentByUser: false};
-
       dispatch({type: 'WEBSOCKET_MESSAGE', payload: parsedMessage});
     },
   );
+
+  const handleInstructionButtonPress = (apiUrl: string) => {
+    setCurrentUrl(apiUrl);
+    setLoading(true);
+  };
 
   const handleSendMessage = (
     message: string,
@@ -97,9 +90,29 @@ const ChatScreen: React.FC = () => {
     }
   };
 
+  const renderButtons = () => {
+    return (
+      <View style={styles.buttonContainer}>
+        <View style={styles.botMessage}>
+          {buttons.map((button, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.button}
+              onPress={() => handleInstructionButtonPress(button.apiUrl)}>
+              <Text style={styles.buttonIcon}>{button.icon}</Text>
+              <Text style={styles.buttonText}>{button.text}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
+
+      {renderButtons()}
 
       <FlatList
         data={messages}
@@ -123,10 +136,6 @@ const ChatScreen: React.FC = () => {
         </View>
       )}
 
-      <ChatbotInstruction
-        buttons={buttons} // 버튼 목록 전달
-        onButtonPress={handleInstructionButtonPress} // 클릭 핸들러 전달
-      />
       <MessageInput
         onSend={(message, imageUri, binaryData) =>
           handleSendMessage(message, imageUri, binaryData)
@@ -186,6 +195,28 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: 'gray',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.ORANGE_200,
+    borderRadius: 50,
+    padding: 10,
+    margin: 5,
+  },
+  buttonIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 
