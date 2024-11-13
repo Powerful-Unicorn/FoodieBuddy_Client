@@ -13,8 +13,9 @@ import {RootState} from '../../states/store';
 import MessageInput from '../../components/chat/MessageInput';
 import {useWebSocket} from '../../webSocket/websocketHandler';
 import {colors} from '../../constants';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// MessageItem 타입 정의
 type MessageItem = {
   text?: string;
   sentByUser: boolean;
@@ -27,21 +28,20 @@ const ChatScreen: React.FC = () => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 버튼 목록
   const buttons = [
     {
-      icon: '❓',
-      text: 'Food Recommendation',
+      icon: 'question-mark',
+      text: 'Recommend Food',
       apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/recommendation',
     },
     {
-      icon: '📋',
-      text: 'Explain Menu Board',
+      icon: 'menu-book',
+      text: 'Explain\nMenu Board',
       apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askmenu',
     },
     {
-      icon: '🍳',
-      text: 'Explain Side Dish',
+      icon: 'egg-alt',
+      text: 'Explain\nSide Dish',
       apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askdish',
     },
   ];
@@ -92,18 +92,17 @@ const ChatScreen: React.FC = () => {
 
   const renderButtons = () => {
     return (
-      <View style={styles.buttonContainer}>
-        <View style={styles.botMessage}>
-          {buttons.map((button, index) => (
+      <View style={styles.buttonRow}>
+        {buttons.map((button, index) => (
+          <View key={index} style={styles.buttonWrapper}>
             <TouchableOpacity
-              key={index}
               style={styles.button}
               onPress={() => handleInstructionButtonPress(button.apiUrl)}>
-              <Text style={styles.buttonIcon}>{button.icon}</Text>
-              <Text style={styles.buttonText}>{button.text}</Text>
+              <Icon name={button.icon} size={28} color="white" />
             </TouchableOpacity>
-          ))}
-        </View>
+            <Text style={styles.buttonText}>{button.text}</Text>
+          </View>
+        ))}
       </View>
     );
   };
@@ -196,27 +195,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
   },
-  buttonContainer: {
+  buttonRow: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 10,
+    marginVertical: 10,
+  },
+  buttonWrapper: {
+    alignItems: 'center',
+    maxWidth: 100, // 버튼과 텍스트의 최대 너비 제한
   },
   button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.ORANGE_200,
-    borderRadius: 50,
-    padding: 10,
-    margin: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 5,
   },
   buttonIcon: {
-    fontSize: 18,
-    marginRight: 8,
+    fontSize: 24,
+    color: 'white',
   },
   buttonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 12,
+    textAlign: 'center',
+    color: 'black',
+    lineHeight: 15, // 줄 간격 설정
   },
 });
 
