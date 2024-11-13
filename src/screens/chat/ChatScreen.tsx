@@ -1,4 +1,3 @@
-// ChatScreen.tsx
 import React, {useState} from 'react';
 import {
   View,
@@ -14,80 +13,109 @@ import MessageInput from '../../components/chat/MessageInput';
 import ChatbotInstruction from '../../components/chat/ChatbotInstruction';
 import {useWebSocket} from '../../webSocket/websocketHandler';
 
+// MessageItem 타입 정의
+type MessageItem = {
+  text?: string;
+  sentByUser: boolean;
+  imageUri?: string;
+};
+
 const ChatScreen: React.FC = () => {
   const dispatch = useDispatch();
   const {messages} = useSelector((state: RootState) => state.websocket);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 웹소켓 메시지 수신 처리 함수
-  const handleMessageReceived = (data: any) => {
-    setLoading(false);
+  // 버튼 목록
+  const buttons = [
+    'Menu recommendation',
+    'Upload menu photo',
+    'Upload dish photo',
+  ];
 
-    const parsedMessage =
-      typeof data === 'string'
-        ? {text: data, sentByUser: false}
-        : data instanceof Blob
-        ? {imageUri: URL.createObjectURL(data), sentByUser: false}
-        : null;
+  // 버튼 클릭 핸들러
+  const handleInstructionButtonPress = (button: string) => {
+    let apiUrl = '';
 
-    if (parsedMessage) {
-      dispatch({type: 'WEBSOCKET_MESSAGE', payload: parsedMessage});
+    switch (button) {
+      case 'Menu recommendation':
+        apiUrl = 'ws://api.foodiebuddy.kro.kr:8000/recommendation'; // 웹소켓 API 1
+        break;
+      case 'Upload menu photo':
+        apiUrl = 'ws://api.foodiebuddy.kro.kr:8000/askmenu'; // 웹소켓 API 2
+        break;
+      case 'Upload dish photo':
+        apiUrl = 'ws://api.foodiebuddy.kro.kr:8000/askdish'; // 웹소켓 API 3
+        break;
+      default:
+        console.error('Unknown button action:', button);
+        return;
     }
+
+    setCurrentUrl(apiUrl);
+    setLoading(true);
   };
 
-  // 웹소켓 연결 및 메시지 전송 설정
   const {isConnected, sendMessage} = useWebSocket(
     currentUrl || '',
-    handleMessageReceived,
+    (data: any) => {
+      setLoading(false);
+
+      const parsedMessage: MessageItem =
+        typeof data === 'string'
+          ? {text: data, sentByUser: false}
+          : {text: '', sentByUser: false};
+
+      dispatch({type: 'WEBSOCKET_MESSAGE', payload: parsedMessage});
+    },
   );
 
-  // URL 변경 시 웹소켓 재연결
-  const handleInstructionButtonPress = (url: string) => {
-    setCurrentUrl(url);
+  const handleSendMessage = (
+    message: string,
+    imageUri: string | null,
+    binaryData: ArrayBuffer | null,
+  ) => {
     setLoading(true);
-  };
 
-  // 메시지 및 이미지 전송
-  const handleSendMessage = (message: string, imageUri: string | null) => {
-    setLoading(true);
-    const payload = imageUri ? {imageUri, text: message} : message;
-    sendMessage(payload);
+    if (binaryData) {
+      sendMessage(binaryData);
+    }
 
-    // 로컬 상태에 전송 메시지 추가
+    const payload: MessageItem = {
+      text: message,
+      imageUri: imageUri || undefined,
+      sentByUser: true,
+    };
+
     dispatch({
       type: 'WEBSOCKET_MESSAGE',
-      payload: {text: message, imageUri, sentByUser: true},
+      payload,
     });
+
+    if (message.trim()) {
+      sendMessage(payload);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* 웹소켓 연결 상태 메시지 */}
       {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
 
-      {/* 채팅 메시지 리스트 */}
       <FlatList
         data={messages}
-        renderItem={({item}) =>
-          item.imageUri ? (
-            <View
-              style={item.sentByUser ? styles.userMessage : styles.botMessage}>
+        renderItem={({item}) => (
+          <View
+            style={item.sentByUser ? styles.userMessage : styles.botMessage}>
+            {item.imageUri && (
               <Image source={{uri: item.imageUri}} style={styles.image} />
-              <Text style={styles.messageText}>{item.text}</Text>
-            </View>
-          ) : (
-            <View
-              style={item.sentByUser ? styles.userMessage : styles.botMessage}>
-              <Text style={styles.messageText}>{item.text}</Text>
-            </View>
-          )
-        }
+            )}
+            {item.text && <Text style={styles.messageText}>{item.text}</Text>}
+          </View>
+        )}
         keyExtractor={(_, index) => index.toString()}
         contentContainerStyle={styles.flatListContent}
       />
 
-      {/* 로딩 표시 */}
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
@@ -95,9 +123,14 @@ const ChatScreen: React.FC = () => {
         </View>
       )}
 
-      <ChatbotInstruction onButtonPress={handleInstructionButtonPress} />
+      <ChatbotInstruction
+        buttons={buttons} // 버튼 목록 전달
+        onButtonPress={handleInstructionButtonPress} // 클릭 핸들러 전달
+      />
       <MessageInput
-        onSend={(message, imageUri) => handleSendMessage(message, imageUri)}
+        onSend={(message, imageUri, binaryData) =>
+          handleSendMessage(message, imageUri, binaryData)
+        }
       />
     </View>
   );

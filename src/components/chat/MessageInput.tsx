@@ -11,31 +11,41 @@ import {
 import ImageInput from './ImageInput';
 
 interface MessageInputProps {
-  onSend: (message: string, imageUri: string | null) => void;
+  onSend: (
+    message: string,
+    imageUri: string | null,
+    binaryData: ArrayBuffer | null,
+  ) => void;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
   const [message, setMessage] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [binaryData, setBinaryData] = useState<ArrayBuffer | null>(null);
 
   const handleSend = () => {
     if (message.trim() || imageUri) {
-      onSend(message, imageUri);
+      onSend(message, imageUri, binaryData);
       setMessage('');
       setImageUri(null);
+      setBinaryData(null);
     }
   };
 
   const handleRemoveImage = () => {
     setImageUri(null);
+    setBinaryData(null);
   };
 
   return (
     <View style={styles.container}>
-      {/* 이미지 선택 버튼 */}
-      <ImageInput onChange={uri => setImageUri(uri)} />
+      <ImageInput
+        onChange={(uri, data) => {
+          setImageUri(uri);
+          setBinaryData(data);
+        }}
+      />
 
-      {/* 이미지 선택 시 미리보기와 삭제 버튼 */}
       {imageUri && (
         <View style={styles.previewContainer}>
           <Image source={{uri: imageUri}} style={styles.imagePreview} />
@@ -47,15 +57,12 @@ const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
         </View>
       )}
 
-      {/* 메시지 입력 필드 */}
       <TextInput
         style={styles.input}
         placeholder="Ask me anything"
         value={message}
         onChangeText={setMessage}
       />
-
-      {/* 전송 버튼 */}
       <Button title="Send" onPress={handleSend} />
     </View>
   );

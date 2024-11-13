@@ -5,25 +5,32 @@ import {colors} from '../../constants';
 
 interface MessageItemProps {
   item: {
-    text?: string;
-    imageUri?: string;
-    sentByUser?: boolean;
-    buttons?: string[];
+    text?: string; // 텍스트 메시지 (선택적)
+    imageUri?: string; // 이미지 URI (선택적)
+    sentByUser?: boolean; // 사용자 메시지 여부 (선택적)
+    buttons?: string[]; // 버튼 목록 (선택적)
   };
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({item}) => {
-  const [isImageLoading, setIsImageLoading] = useState(true);
-  const [imageLoadError, setImageLoadError] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(!!item.imageUri); // 이미지 로드 중 상태
+  const [imageLoadError, setImageLoadError] = useState(false); // 이미지 로드 에러 상태
 
+  // 이미지 로드 성공 핸들러
   const handleImageLoad = () => {
     setIsImageLoading(false);
   };
 
+  // 이미지 로드 실패 핸들러
   const handleImageError = () => {
     setIsImageLoading(false);
     setImageLoadError(true);
   };
+
+  // 렌더링할 데이터가 없는 경우 처리
+  if (!item.text && !item.imageUri && !item.buttons?.length) {
+    return null; // 텍스트, 이미지, 버튼이 없는 경우 렌더링하지 않음
+  }
 
   return (
     <View
@@ -31,6 +38,7 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
         styles.messageContainer,
         item.sentByUser ? styles.sentMessage : styles.receivedMessage,
       ]}>
+      {/* 이미지 렌더링 */}
       {item.imageUri && (
         <View style={styles.imageContainer}>
           {isImageLoading && (
@@ -48,8 +56,14 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
           )}
         </View>
       )}
+
+      {/* 텍스트 메시지 렌더링 */}
       {item.text && <Text style={styles.messageText}>{item.text}</Text>}
-      {item.buttons && <ChatbotInstruction buttons={item.buttons} />}
+
+      {/* 버튼 렌더링 */}
+      {item.buttons && item.buttons.length > 0 && (
+        <ChatbotInstruction buttons={item.buttons} />
+      )}
     </View>
   );
 };
@@ -70,7 +84,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   imageContainer: {
-    marginBottom: 5, // 이미지와 텍스트 사이의 간격을 추가
+    marginBottom: 5, // 이미지와 텍스트 사이의 간격 추가
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -86,7 +100,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    flexShrink: 1, // 긴 텍스트가 있을 경우 줄바꿈을 처리하기 위해 추가
+    flexShrink: 1, // 긴 텍스트가 있을 경우 줄바꿈 처리
   },
 });
 

@@ -1,57 +1,38 @@
-// ChatbotInstruction.tsx
 import React from 'react';
-import {View, TouchableOpacity, Text, StyleSheet} from 'react-native';
+import {View, Button, StyleSheet} from 'react-native';
 
 interface ChatbotInstructionProps {
-  onButtonPress: (url: string) => void;
+  buttons?: string[]; // 버튼 목록
+  onButtonPress?: (url: string) => void; // 버튼 클릭 핸들러
 }
 
 const ChatbotInstruction: React.FC<ChatbotInstructionProps> = ({
+  buttons = [],
   onButtonPress,
 }) => {
+  if (!buttons || buttons.length === 0) {
+    return null; // 버튼이 없으면 아무것도 렌더링하지 않음
+  }
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() =>
-          onButtonPress('ws://api.foodiebuddy.kro.kr:8000/recommendation')
-        }>
-        <Text style={styles.buttonText}>Food Recommendation</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() =>
-          onButtonPress('ws://api.foodiebuddy.kro.kr:8000/askmenu')
-        }>
-        <Text style={styles.buttonText}>Upload Menu Photo</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() =>
-          onButtonPress('ws://api.foodiebuddy.kro.kr:8000/askdish')
-        }>
-        <Text style={styles.buttonText}>Upload Dish Photo</Text>
-      </TouchableOpacity>
+      {buttons.map((button, index) => (
+        <Button
+          key={index}
+          title={button}
+          onPress={() => onButtonPress?.(button)} // 클릭 시 부모로 이벤트 전달
+        />
+      ))}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  button: {
-    backgroundColor: '#f27a57',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 24,
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10, // 버튼 간의 간격 추가
+    marginTop: 10,
   },
 });
 

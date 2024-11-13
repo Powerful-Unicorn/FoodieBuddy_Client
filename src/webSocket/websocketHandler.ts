@@ -1,4 +1,3 @@
-// WebSocketHandler.ts
 import {useEffect, useRef, useState} from 'react';
 import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../states/store';
@@ -17,7 +16,6 @@ export function useWebSocket(
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // WebSocket 연결 설정
     wsRef.current = new WebSocket(url);
     wsRef.current.binaryType = 'blob';
 
@@ -28,12 +26,10 @@ export function useWebSocket(
     };
 
     wsRef.current.onmessage = event => {
-      console.log('WebSocket message received:', event.data);
-      onMessageReceived(event.data); // 수신된 메시지를 콜백 함수로 처리
+      onMessageReceived(event.data);
     };
 
     wsRef.current.onclose = () => {
-      console.log('WebSocket disconnected');
       setIsConnected(false);
       dispatch({type: WEBSOCKET_DISCONNECT});
     };
@@ -45,9 +41,11 @@ export function useWebSocket(
 
   const sendMessage = (message: any) => {
     if (wsRef.current && isConnected) {
-      wsRef.current.send(
-        typeof message === 'string' ? message : JSON.stringify(message),
-      );
+      if (message instanceof ArrayBuffer) {
+        wsRef.current.send(message);
+      } else {
+        wsRef.current.send(JSON.stringify(message));
+      }
     }
   };
 

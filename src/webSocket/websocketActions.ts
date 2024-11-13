@@ -1,4 +1,3 @@
-// websocketActions.ts
 import {ThunkAction} from '@reduxjs/toolkit';
 import {RootState} from '../states/store';
 import {
@@ -6,22 +5,21 @@ import {
   WEBSOCKET_DISCONNECT,
   WEBSOCKET_MESSAGE,
 } from './websocketActionTypes';
+import {MessageItem} from './websocketReducer';
 
-// WebSocket 인스턴스를 관리하기 위한 전역 변수
 let websocket: WebSocket | null = null;
 
-// URL을 받아서 WebSocket을 연결하는 액션
+// WebSocket 연결 액션
 export const connectWebSocket = (
   url: string,
 ): ThunkAction<void, RootState, unknown, any> => {
   return dispatch => {
-    // 기존 WebSocket 연결이 있으면 닫기
     if (websocket) {
       websocket.close();
     }
 
-    // 새로운 WebSocket 인스턴스 생성
     websocket = new WebSocket(url);
+    websocket.binaryType = 'blob';
 
     websocket.onopen = () => {
       console.log(`WebSocket connected to ${url}`);
@@ -29,8 +27,15 @@ export const connectWebSocket = (
     };
 
     websocket.onmessage = event => {
-      console.log('WebSocket message received:', event.data);
-      dispatch({type: WEBSOCKET_MESSAGE, payload: event.data});
+      const data = event.data;
+
+      // 메시지 유형에 따라 처리
+      const message: MessageItem =
+        typeof data === 'string'
+          ? {text: data, sentByUser: false} // 문자열 메시지
+          : {imageUri: URL.createObjectURL(data), sentByUser: false}; // 바이너리 메시지
+
+      dispatch({type: WEBSOCKET_MESSAGE, payload: message});
     };
 
     websocket.onclose = () => {
@@ -41,7 +46,24 @@ export const connectWebSocket = (
   };
 };
 
-// WebSocket 연결을 닫는 액션
+// WebSocket 메시지 전송 액션
+export const sendWebSocketMessage = (
+  message: any,
+): ThunkAction<void, RootState, unknown, any> => {
+  return () => {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      if (message instanceof ArrayBuffer) {
+        websocket.send(message); // 바이너리 데이터 전송
+      } else {
+        websocket.send(JSON.stringify(message)); // 문자열/JSON 전송
+      }
+    } else {
+      console.error('WebSocket is not connected');
+    }
+  };
+};
+
+// WebSocket 연결 종료 액션
 export const disconnectWebSocket = (): ThunkAction<
   void,
   RootState,
