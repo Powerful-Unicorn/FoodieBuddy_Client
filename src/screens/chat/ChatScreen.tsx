@@ -14,7 +14,6 @@ import MessageInput from '../../components/chat/MessageInput';
 import {useWebSocket} from '../../webSocket/websocketHandler';
 import {colors} from '../../constants';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type MessageItem = {
   text?: string;
@@ -22,7 +21,7 @@ type MessageItem = {
   imageUri?: string;
 };
 
-const ChatScreen: React.FC = () => {
+const ChatScreen: React.FC<{route: any}> = ({route}) => {
   const dispatch = useDispatch();
   const {messages} = useSelector((state: RootState) => state.websocket);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
@@ -107,11 +106,12 @@ const ChatScreen: React.FC = () => {
     );
   };
 
+  const showInstruction = route.params?.showInstruction ?? true; // 초기값은 true
   return (
     <View style={styles.container}>
       {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
 
-      {renderButtons()}
+      {showInstruction && renderButtons()}
 
       <FlatList
         data={messages}
@@ -214,15 +214,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 5,
   },
-  buttonIcon: {
-    fontSize: 24,
-    color: 'white',
-  },
   buttonText: {
     fontSize: 12,
     textAlign: 'center',
     color: 'black',
-    lineHeight: 15, // 줄 간격 설정
+    lineHeight: 15,
   },
 });
 
