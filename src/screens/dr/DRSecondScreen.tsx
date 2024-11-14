@@ -10,15 +10,20 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {authNavigations, colors, mainNavigations} from '../../constants';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
+import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
-import api from '../../apis/api'; // API 요청을 위한 모듈
-import {useSelector} from 'react-redux'; // Redux 상태 선택자를 가져오기
+import {useSelector} from 'react-redux';
 import {CommonActions} from '@react-navigation/native';
 import {login} from '../../states/authSlice';
 import {useDispatch} from 'react-redux';
+import api from '../../apis/api';
 
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -26,15 +31,33 @@ type DRSecondScreenProps = StackScreenProps<
 >;
 
 const ingredientOptions = [
-  'Meat',
-  'Egg',
-  'Dairy',
-  'Seafood',
-  'Nuts',
-  'Gluten',
-  'Fruits',
-  'Vegetables',
-  'Other',
+  {
+    label: 'Meat',
+    icon: <MaterialCommunityIcons name="food-drumstick" size={40} />,
+  },
+  {label: 'Egg', icon: <Ionicons name="egg" size={40} />},
+  {
+    label: 'Dairy',
+    icon: <MaterialCommunityIcons name="cow" size={40} />,
+  },
+  {label: 'Seafood', icon: <Ionicons name="fish" size={40} />},
+  {label: 'Nuts', icon: <MaterialCommunityIcons name="peanut" size={40} />},
+  {
+    label: 'Gluten',
+    icon: <FontAwesome6 name="wheat-awn" size={40} />,
+  },
+  {
+    label: 'Fruits',
+    icon: <FontAwesome name="apple" size={40} />,
+  },
+  {
+    label: 'Vegetables',
+    icon: <FontAwesome name="leaf" size={40} />,
+  },
+  {
+    label: 'Other',
+    icon: <MaterialCommunityIcons name="pencil-plus" size={40} />,
+  },
 ];
 
 const subOptionsMap: {[key: string]: string[]} = {
@@ -47,186 +70,50 @@ const subOptionsMap: {[key: string]: string[]} = {
 };
 
 function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
-  const {dietRestrictions, selectedDR} = route.params; // 이전 화면에서 받아온 데이터
+  const {dietRestrictions} = route.params;
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [showSubOptions, setShowSubOptions] = useState<{
-    [key: string]: boolean;
-  }>({
-    Dairy: false,
-    Meat: false,
-    Seafood: false,
-    Nuts: false,
-  });
   const [showOtherInput, setShowOtherInput] = useState(false);
-  const [otherText, setOtherText] = useState(dietRestrictions.other || '');
+  const [otherText, setOtherText] = useState('');
   const [isEditingOther, setIsEditingOther] = useState(true);
   const userId = useSelector((state: any) => state.user.userId);
   const dispatch = useDispatch();
 
-  // dietRestrictions에 따라 초기값 설정
   useEffect(() => {
     const initialSelectedOptions: string[] = [];
-
-    // Meat 처리: "all kinds"라면 하위 항목 모두 포함
-    if (dietRestrictions.meat === 'all kinds') {
-      initialSelectedOptions.push('Meat', ...subOptionsMap['Meat']);
-      setShowSubOptions(prev => ({...prev, Meat: true}));
-    }
-
-    // Egg, Dairy, Seafood, 기타 항목 처리
-    if (dietRestrictions.egg === true) initialSelectedOptions.push('Egg');
-    if (dietRestrictions.dairy) initialSelectedOptions.push('Dairy');
-    if (dietRestrictions.seafood) initialSelectedOptions.push('Seafood');
-    if (dietRestrictions.nuts) initialSelectedOptions.push('Nuts');
-    if (dietRestrictions.gluten === true) initialSelectedOptions.push('Gluten');
-    if (dietRestrictions.fruit) initialSelectedOptions.push('Fruits');
-    if (dietRestrictions.vegetable) initialSelectedOptions.push('Vegetables');
-    if (dietRestrictions.other) {
-      initialSelectedOptions.push('Other');
-      setShowOtherInput(true);
-      setIsEditingOther(false);
-    }
-
+    if (dietRestrictions.other) setShowOtherInput(true);
     setSelectedOptions(initialSelectedOptions);
   }, [dietRestrictions]);
 
-  // 항목 선택 핸들러
   const handleSelection = (option: string) => {
-    const subOptions = subOptionsMap[option] || [];
-
-    if (subOptions.length > 0) {
-      if (selectedOptions.includes(option)) {
-        setSelectedOptions(
-          selectedOptions.filter(
-            item => ![option, ...subOptions].includes(item),
-          ),
-        );
-        setShowSubOptions({...showSubOptions, [option]: false});
-      } else {
-        setSelectedOptions([...selectedOptions, option, ...subOptions]);
-        setShowSubOptions({...showSubOptions, [option]: true});
-      }
-    } else if (option === 'Other') {
-      if (selectedOptions.includes('Other')) {
-        setSelectedOptions(selectedOptions.filter(item => item !== 'Other'));
-        setShowOtherInput(false);
-        setOtherText('');
-      } else {
-        setSelectedOptions([...selectedOptions, option]);
-        setShowOtherInput(true);
-        setIsEditingOther(true);
-      }
+    if (selectedOptions.includes(option)) {
+      setSelectedOptions(selectedOptions.filter(item => item !== option));
     } else {
-      if (selectedOptions.includes(option)) {
-        setSelectedOptions(selectedOptions.filter(item => item !== option));
-      } else {
-        setSelectedOptions([...selectedOptions, option]);
-      }
+      setSelectedOptions([...selectedOptions, option]);
     }
   };
 
-  const handleSubSelection = (option: string, subOption: string) => {
-    if (selectedOptions.includes(subOption)) {
-      setSelectedOptions(selectedOptions.filter(item => item !== subOption));
-    } else {
-      setSelectedOptions([...selectedOptions, subOption]);
-    }
-  };
-
-  // API로 요청 보낼 데이터 조합
-  const createRequestBody = () => {
-    const body: any = {
-      meat: selectedOptions.includes('Meat')
-        ? dietRestrictions.meat === 'all kinds'
-          ? 'all kinds'
-          : selectedOptions
-              .filter(item => subOptionsMap['Meat'].includes(item))
-              .join(', ')
-        : '',
-      egg: selectedOptions.includes('Egg'),
-      dairy: selectedOptions.includes('Dairy')
-        ? selectedOptions
-            .filter(item => subOptionsMap['Dairy'].includes(item))
-            .join(', ')
-        : '',
-      seafood: selectedOptions.includes('Seafood')
-        ? selectedOptions
-            .filter(item => subOptionsMap['Seafood'].includes(item))
-            .join(', ')
-        : '',
-      nut: selectedOptions.includes('Nuts')
-        ? selectedOptions
-            .filter(item => subOptionsMap['Nuts'].includes(item))
-            .join(', ')
-        : '',
-      gluten: selectedOptions.includes('Gluten'),
-      fruit: selectedOptions.includes('Fruits')
-        ? selectedOptions
-            .filter(item => subOptionsMap['Fruits'].includes(item))
-            .join(', ')
-        : '',
-      vegetable: selectedOptions.includes('Vegetables')
-        ? selectedOptions
-            .filter(item => subOptionsMap['Vegetables'].includes(item))
-            .join(', ')
-        : '',
-      other: otherText,
-      userId: userId,
-    };
-
-    return body;
-  };
-
-  const handleSubmitOther = () => {
-    setIsEditingOther(false);
-  };
-
-  // 다음 페이지로 이동하는 함수
   const handleNextButton = async () => {
-    const requestBody = createRequestBody();
-    console.log('Request Body: ', requestBody);
-
+    const requestBody = {userId, other: otherText};
     try {
-      const response = await api.put('/user/dr2', requestBody, {
+      await api.put('/user/dr2', requestBody, {
         headers: {'Content-Type': 'application/json'},
       });
-      console.log('Full Response Data:', response.data);
-
-      const filteredResponseData: {[key: string]: any} = {};
-
-      Object.entries(response.data)
-        .filter(
-          ([key, value]) => value !== null && value !== '' && value !== false,
-        )
-        .forEach(([key, value]) => {
-          filteredResponseData[key] = value;
-        });
-      console.log('출력:', filteredResponseData);
-      // 응답 데이터 알림창을 띄우고, 확인을 누르면 ChatScreen으로 이동
-      Alert.alert(
-        'Ingredients you cannot eat',
-        JSON.stringify(filteredResponseData, null, 2),
-        [
-          {
-            text: 'Start Foodie Buddy',
-            onPress: () => {
-              // 로그인 상태로 변경
-              dispatch(login());
-
-              // MainDrawerNavigator의 ChatScreen으로 이동
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{name: 'MainDrawer'}],
-                }),
-              );
-            },
+      Alert.alert('Success', 'Restrictions saved successfully.', [
+        {
+          text: 'Start',
+          onPress: () => {
+            dispatch(login());
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: 'MainDrawer'}],
+              }),
+            );
           },
-        ],
-      );
+        },
+      ]);
     } catch (error) {
-      console.error('Error occurred:', error);
-      Alert.alert('Error', 'Failed to send data');
+      Alert.alert('Error', 'Failed to save data');
     }
   };
 
@@ -238,70 +125,40 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
           <Text style={styles.infoText}>
             Select ingredients you should avoid
           </Text>
-          {ingredientOptions.map(option => (
-            <View key={option} style={styles.optionWrapper}>
+          <View style={styles.optionsGrid}>
+            {ingredientOptions.map(option => (
               <TouchableOpacity
-                style={styles.optionContainer}
-                onPress={() => handleSelection(option)}>
-                <Ionicons
-                  name={
-                    selectedOptions.includes(option)
-                      ? 'checkbox'
-                      : 'checkbox-outline'
-                  }
-                  size={24}
-                  color={colors.ORANGE_800}
-                />
-                <Text style={styles.optionText}>{option}</Text>
+                key={option.label}
+                style={[
+                  styles.optionCard,
+                  selectedOptions.includes(option.label)
+                    ? styles.optionCardSelected
+                    : null,
+                ]}
+                onPress={() => handleSelection(option.label)}>
+                {option.icon}
+                <Text style={styles.optionText}>{option.label}</Text>
               </TouchableOpacity>
-
-              {subOptionsMap[option] && showSubOptions[option] && (
-                <View style={styles.subOptionsRow}>
-                  {subOptionsMap[option].map(subOption => (
-                    <TouchableOpacity
-                      key={subOption}
-                      style={styles.subOptionContainer}
-                      onPress={() => handleSubSelection(option, subOption)}>
-                      <Ionicons
-                        name={
-                          selectedOptions.includes(subOption)
-                            ? 'checkbox'
-                            : 'checkbox-outline'
-                        }
-                        size={24}
-                        color={colors.ORANGE_200}
-                      />
-                      <Text style={styles.subOptionText}>{subOption}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+            ))}
+          </View>
+          {showOtherInput && (
+            <View style={styles.otherInputContainer}>
+              {isEditingOther ? (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Specify ingredients"
+                  value={otherText}
+                  onChangeText={setOtherText}
+                />
+              ) : (
+                <Text style={styles.otherText}>{otherText}</Text>
               )}
-
-              {option === 'Other' && showOtherInput && (
-                <View style={styles.otherInputContainer}>
-                  {isEditingOther ? (
-                    <View style={styles.rowContainer}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Distinguish ingredients using comma"
-                        value={otherText}
-                        onChangeText={setOtherText}
-                      />
-                      <Button title="Submit" onPress={handleSubmitOther} />
-                    </View>
-                  ) : (
-                    <>
-                      <Text style={styles.otherText}>{otherText}</Text>
-                      <Button
-                        title="Edit"
-                        onPress={() => setIsEditingOther(true)}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
+              <Button
+                title={isEditingOther ? 'Submit' : 'Edit'}
+                onPress={() => setIsEditingOther(!isEditingOther)}
+              />
             </View>
-          ))}
+          )}
           <View style={styles.navigationContainer}>
             <TouchableOpacity
               style={styles.navBtn}
@@ -326,7 +183,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // SafeAreaView의 배경색
+    backgroundColor: '#fff',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -343,10 +200,18 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 20,
-    marginBottom: 5,
+    marginBottom: 20,
   },
-  optionWrapper: {
-    backgroundColor: '#fff',
+  optionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  optionCard: {
+    width: '48%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f9f9f9',
     padding: 15,
     marginVertical: 10,
     borderRadius: 10,
@@ -356,51 +221,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  optionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 10,
-    height: 45,
+  optionCardSelected: {
+    backgroundColor: colors.ORANGE_200,
   },
   optionText: {
-    marginLeft: 10,
+    marginTop: 10,
     fontSize: 16,
-  },
-  subOptionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginLeft: 40,
-  },
-  subOptionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 5,
-    marginRight: 15,
-  },
-  subOptionText: {
-    marginLeft: 5,
-    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   otherInputContainer: {
-    marginTop: 10,
-    paddingHorizontal: 10,
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginTop: 20,
   },
   input: {
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
-    marginBottom: 10,
     paddingHorizontal: 10,
-    flex: 1,
-    marginRight: 10,
+    marginBottom: 10,
   },
   otherText: {
     fontSize: 16,
-    marginVertical: 10,
+    marginBottom: 10,
   },
   navigationContainer: {
     flexDirection: 'row',
@@ -410,8 +252,6 @@ const styles = StyleSheet.create({
   },
   navBtn: {
     padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 10,
   },
   pageNumber: {
     fontSize: 16,
