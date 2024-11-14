@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import ChatScreen from '../../screens/chat/ChatScreen';
 import SettingsScreen from '../../screens/settings/SettingsScreen';
@@ -46,6 +46,8 @@ function DrawerIcons(
 }
 
 function MainDrawerNavigator() {
+  const [isToggled, setIsToggled] = useState(false); // 상태를 컴포넌트 바깥에서 관리
+
   return (
     <Drawer.Navigator
       drawerContent={CustomDrawerContent}
@@ -70,10 +72,15 @@ function MainDrawerNavigator() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => {
-                navigation.setParams({showInstruction: true});
+                setIsToggled(prevState => !prevState); // 상태 토글
+                navigation.setParams({showInstruction: !isToggled}); // Params에 전달
               }}
               style={{marginRight: 15}}>
-              <MaterialIcons name="add" size={28} color={colors.ORANGE_800} />
+              <MaterialIcons
+                name={isToggled ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                size={28}
+                color={colors.ORANGE_800}
+              />
             </TouchableOpacity>
           ),
         })}
