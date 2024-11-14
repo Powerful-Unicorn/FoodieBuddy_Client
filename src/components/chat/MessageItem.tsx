@@ -27,46 +27,63 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
 
   // 텍스트 메시지 파싱 (볼드체 및 해시태그 스타일 적용)
   const renderParsedMessage = (message: string) => {
-    const bulletRegex = /(^- +.+)/gm; // 줄의 시작에서 -와 공백이 있는 항목
+    const bulletRegex = /^- ?(.*)/gm; // - 뒤 공백 허용
     const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g; // **(내용)** 또는 #해시태그 감지
 
-    // 불릿포인트와 다른 텍스트를 모두 감지
+    // 텍스트 분리
     const parts = message.split(
       new RegExp(`${bulletRegex.source}|${boldAndHashtagRegex.source}`, 'g'),
     );
+
+    // 볼드체 텍스트를 추출하여 중복 제거 준비
+    const boldTexts: string[] = [];
+    message.replace(boldAndHashtagRegex, (match, _, boldText) => {
+      if (boldText) boldTexts.push(boldText.trim());
+      return match;
+    });
 
     return parts
       .filter(part => part) // undefined 또는 빈 문자열 제거
       .map((part, index) => {
         if (part.startsWith('**') && part.endsWith('**')) {
-          // 볼드체 처리
+          const content = part.slice(2, -2).trim(); // ** 제거
           return (
             <Text key={index} style={styles.boldText}>
-              {part.slice(2, -2)} {/* ** 제거 */}
+              {content}
             </Text>
           );
         } else if (part.startsWith('#')) {
-          // 해시태그 처리
           return (
             <Text key={index} style={styles.hashtagText}>
               {part}
             </Text>
           );
-        } else if (part.trim().startsWith('-')) {
-          // 불릿포인트 처리
+        } else if (part.startsWith('- ')) {
           return (
             <View key={index} style={styles.bulletContainer}>
               <Text style={styles.bulletPoint}>•</Text>
-              <Text style={styles.bulletText}>
-                {part.trim().slice(1).trim()}
-              </Text>
+              <Text style={styles.bulletText}>{part.slice(2).trim()}</Text>
             </View>
           );
         } else {
-          // 일반 텍스트
+          // 중복 제거: 볼드체 텍스트와 동일한 내용이면 제외
+          const isDuplicate = boldTexts.some(boldText =>
+            part.trim().startsWith(boldText),
+          );
+          if (isDuplicate) {
+            const cleanedText = boldTexts.reduce(
+              (text, boldText) => text.replace(boldText, '').trim(),
+              part.trim(),
+            );
+            return cleanedText ? (
+              <Text key={index} style={styles.normalText}>
+                {cleanedText}
+              </Text>
+            ) : null;
+          }
           return (
             <Text key={index} style={styles.normalText}>
-              {part}
+              {part.trim()}
             </Text>
           );
         }
@@ -168,8 +185,9 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   bulletPoint: {
-    marginRight: 5,
-    color: colors.BLACK, // 불릿포인트 색상
+    marginRight: 6,
+    fontSize: 16,
+    color: colors.BLACK,
   },
   bulletText: {
     color: colors.BLACK, // 불릿 텍스트 색상
