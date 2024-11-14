@@ -49,24 +49,14 @@ function AuthStackNavigator() {
         name={authNavigations.DRFIRST}
         component={DRFirstScreen}
         options={{
-          headerTitle: 'Dietary Restriction',
-          headerLeft: () => null,
-          headerStyle: {
-            borderBottomColor: colors.ORANGE_200,
-            borderBottomWidth: 3,
-          },
+          headerShown: false, // 헤더 비활성화
         }}
       />
       <Stack.Screen
         name={authNavigations.DRSECOND}
         component={DRSecondScreen}
         options={{
-          headerTitle: 'Ingredients you should avoid',
-          headerLeft: () => null,
-          headerStyle: {
-            borderBottomColor: colors.ORANGE_200,
-            borderBottomWidth: 3,
-          },
+          headerShown: false, // 헤더 비활성화
         }}
       />
     </Stack.Navigator>

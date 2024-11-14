@@ -8,6 +8,7 @@ import {
   Button,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {authNavigations, colors, mainNavigations} from '../../constants';
@@ -230,94 +231,103 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        {ingredientOptions.map(option => (
-          <View key={option} style={styles.optionWrapper}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <Text style={styles.titleText}>Step 2</Text>
+          <Text style={styles.infoText}>
+            Select ingredients you should avoid
+          </Text>
+          {ingredientOptions.map(option => (
+            <View key={option} style={styles.optionWrapper}>
+              <TouchableOpacity
+                style={styles.optionContainer}
+                onPress={() => handleSelection(option)}>
+                <Ionicons
+                  name={
+                    selectedOptions.includes(option)
+                      ? 'checkbox'
+                      : 'checkbox-outline'
+                  }
+                  size={24}
+                  color={colors.ORANGE_800}
+                />
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+
+              {subOptionsMap[option] && showSubOptions[option] && (
+                <View style={styles.subOptionsRow}>
+                  {subOptionsMap[option].map(subOption => (
+                    <TouchableOpacity
+                      key={subOption}
+                      style={styles.subOptionContainer}
+                      onPress={() => handleSubSelection(option, subOption)}>
+                      <Ionicons
+                        name={
+                          selectedOptions.includes(subOption)
+                            ? 'checkbox'
+                            : 'checkbox-outline'
+                        }
+                        size={24}
+                        color={colors.ORANGE_200}
+                      />
+                      <Text style={styles.subOptionText}>{subOption}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {option === 'Other' && showOtherInput && (
+                <View style={styles.otherInputContainer}>
+                  {isEditingOther ? (
+                    <View style={styles.rowContainer}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Distinguish ingredients using comma"
+                        value={otherText}
+                        onChangeText={setOtherText}
+                      />
+                      <Button title="Submit" onPress={handleSubmitOther} />
+                    </View>
+                  ) : (
+                    <>
+                      <Text style={styles.otherText}>{otherText}</Text>
+                      <Button
+                        title="Edit"
+                        onPress={() => setIsEditingOther(true)}
+                      />
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
+          ))}
+          <View style={styles.navigationContainer}>
             <TouchableOpacity
-              style={styles.optionContainer}
-              onPress={() => handleSelection(option)}>
-              <Ionicons
-                name={
-                  selectedOptions.includes(option)
-                    ? 'checkbox'
-                    : 'checkbox-outline'
-                }
-                size={24}
-                color={colors.ORANGE_800}
-              />
-              <Text style={styles.optionText}>{option}</Text>
+              style={styles.navBtn}
+              onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
             </TouchableOpacity>
-
-            {subOptionsMap[option] && showSubOptions[option] && (
-              <View style={styles.subOptionsRow}>
-                {subOptionsMap[option].map(subOption => (
-                  <TouchableOpacity
-                    key={subOption}
-                    style={styles.subOptionContainer}
-                    onPress={() => handleSubSelection(option, subOption)}>
-                    <Ionicons
-                      name={
-                        selectedOptions.includes(subOption)
-                          ? 'checkbox'
-                          : 'checkbox-outline'
-                      }
-                      size={24}
-                      color={colors.ORANGE_200}
-                    />
-                    <Text style={styles.subOptionText}>{subOption}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {option === 'Other' && showOtherInput && (
-              <View style={styles.otherInputContainer}>
-                {isEditingOther ? (
-                  <View style={styles.rowContainer}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Distinguish ingredients using comma"
-                      value={otherText}
-                      onChangeText={setOtherText}
-                    />
-                    <Button title="Submit" onPress={handleSubmitOther} />
-                  </View>
-                ) : (
-                  <>
-                    <Text style={styles.otherText}>{otherText}</Text>
-                    <Button
-                      title="Edit"
-                      onPress={() => setIsEditingOther(true)}
-                    />
-                  </>
-                )}
-              </View>
-            )}
+            <Text style={styles.pageNumber}>2</Text>
+            <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={colors.GRAY_700}
+              />
+            </TouchableOpacity>
           </View>
-        ))}
-
-        <View style={styles.navigationContainer}>
-          <TouchableOpacity
-            style={styles.navBtn}
-            onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
-          </TouchableOpacity>
-          <Text style={styles.pageNumber}>2</Text>
-          <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={colors.GRAY_700}
-            />
-          </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff', // SafeAreaView의 배경색
+  },
   scrollContainer: {
     flexGrow: 1,
   },
@@ -325,6 +335,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     justifyContent: 'flex-start',
+  },
+  titleText: {
+    marginBottom: 15,
+    fontSize: 25,
+    fontWeight: 'bold',
+  },
+  infoText: {
+    fontSize: 20,
+    marginBottom: 5,
   },
   optionWrapper: {
     backgroundColor: '#fff',

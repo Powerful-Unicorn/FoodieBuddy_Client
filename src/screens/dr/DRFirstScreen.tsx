@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
@@ -13,7 +14,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import axios from 'axios';
-import {useSelector} from 'react-redux'; // Redux 상태 선택자를 가져오기
+import {useSelector} from 'react-redux';
 
 type DRFirstScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -36,7 +37,6 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
   const [selectedDR, setSelectedDR] = useState<string[]>([]);
   const userId = useSelector((state: any) => state.user.userId); // Redux에서 userId 가져오기
 
-  // 항목 선택 핸들러
   const handleSelection = (option: string) => {
     if (selectedDR.includes(option)) {
       setSelectedDR(selectedDR.filter(item => item !== option));
@@ -45,119 +45,98 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
     }
   };
 
-  // 서버로 API 요청 보내는 함수
   const handleNextButton = async () => {
     const requestBody = {
       religion: '',
-      vegetarian: selectedDR.join(', '), // 선택한 식단 정보를 서버에 보냄
-      userId: userId, // Redux에서 가져온 유저 ID 사용
+      vegetarian: selectedDR.join(', '),
+      userId: userId,
     };
 
     try {
       const response = await api.post('/user/dr1', requestBody, {
-        headers: {
-          'Content-Type': 'application/json', // Content-Type을 명시적으로 설정
-        },
+        headers: {'Content-Type': 'application/json'},
       });
 
-      console.log('Request Body:', requestBody);
-      console.log('Full Response Data:', response.data);
-      const {religion, vegetarian} = requestBody;
-      const {meat, egg, dairy, seafood, nut, gluten, fruit, vegetable, other} =
-        response.data;
-
-      // Alert로 받은 응답 내용을 보여줌
-      Alert.alert(
-        'Your dietary restriciton',
-        vegetarian || religion,
-
-        //       `Meat: ${meat || 'all kinds'},
-        // Egg: ${egg === false ? 'false' : 'true'},
-        // Dairy: ${dairy || ''},
-        // Seafood: ${seafood || ''},
-        // Nut: ${nut || ''},
-        // Gluten: ${gluten === false ? 'false' : 'true'},
-        // Fruit: ${fruit || ''},
-        // Vegetable: ${vegetable || ''},
-        // Other: ${other || ''}`,
-      );
-
-      // 다음 페이지로 이동하고 응답 데이터를 전달
       navigation.navigate(authNavigations.DRSECOND, {
-        selectedDR: selectedDR.join(', '), // 선택한 식단 정보 추가
-        dietRestrictions: response.data, // API 응답 데이터를 두 번째 페이지로 전달
+        selectedDR: selectedDR.join(', '),
+        dietRestrictions: response.data,
       });
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          console.log('Error Data:', error.response.data);
-          Alert.alert(
-            'Error',
-            error.response.data.message || 'Failed to fetch preferences',
-          );
-        } else {
-          Alert.alert('Error', 'Failed to fetch preferences');
-        }
+      if (axios.isAxiosError(error) && error.response) {
+        Alert.alert(
+          'Error',
+          error.response.data.message || 'Failed to fetch preferences',
+        );
       } else {
         Alert.alert('Error', 'An unexpected error occurred');
-        console.error('Unexpected error:', error);
       }
     }
   };
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        {dietaryOptions.map(option => (
-          <View key={option} style={[styles.optionWrapper, styles.shadowStyle]}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView>
+        <View style={styles.container}>
+          <Text style={styles.titleText}>Step 1</Text>
+          <Text style={styles.infoText}>Select your dietary restrictions</Text>
+          {dietaryOptions.map(option => (
+            <View
+              key={option}
+              style={[styles.optionWrapper, styles.shadowStyle]}>
+              <TouchableOpacity
+                style={styles.optionContainer}
+                onPress={() => handleSelection(option)}>
+                <Ionicons
+                  name={
+                    selectedDR.includes(option)
+                      ? 'checkbox'
+                      : 'checkbox-outline'
+                  }
+                  size={24}
+                  color={colors.ORANGE_800}
+                />
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <View style={styles.navigationContainer}>
             <TouchableOpacity
-              style={styles.optionContainer}
-              onPress={() => handleSelection(option)}>
+              style={styles.navBtn}
+              onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
+            </TouchableOpacity>
+            <Text style={styles.pageNumber}>1</Text>
+            <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
               <Ionicons
-                name={
-                  selectedDR.includes(option) ? 'checkbox' : 'checkbox-outline'
-                }
+                name="chevron-forward"
                 size={24}
-                color={colors.ORANGE_800}
+                color={colors.GRAY_700}
               />
-              <Text style={styles.optionText}>{option}</Text>
             </TouchableOpacity>
           </View>
-        ))}
-
-        {/* 페이지 이동 */}
-        <View style={styles.navigationContainer}>
-          <TouchableOpacity
-            style={styles.navBtn}
-            onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
-          </TouchableOpacity>
-          <Text style={styles.pageNumber}>1</Text>
-          <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={colors.GRAY_700}
-            />
-          </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff', // SafeAreaView의 배경색
+  },
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingVertical: 5,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 18,
-    marginBottom: 20,
+  titleText: {
+    marginBottom: 15,
+    fontSize: 25,
     fontWeight: 'bold',
   },
+  infoText: {fontSize: 20, marginBottom: 5},
   optionWrapper: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -166,10 +145,7 @@ const styles = StyleSheet.create({
   },
   shadowStyle: {
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
