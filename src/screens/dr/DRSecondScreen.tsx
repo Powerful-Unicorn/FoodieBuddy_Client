@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,16 @@ import {
   TextInput,
   Button,
   ScrollView,
-  Alert,
   SafeAreaView,
 } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 
-import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
-import {useSelector} from 'react-redux';
-import {CommonActions} from '@react-navigation/native';
-import {login} from '../../states/authSlice';
-import {useDispatch} from 'react-redux';
-import api from '../../apis/api';
+import {authNavigations, colors} from '../../constants';
 
 type DRSecondScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -33,30 +26,39 @@ type DRSecondScreenProps = StackScreenProps<
 const ingredientOptions = [
   {
     label: 'Meat',
-    icon: <MaterialCommunityIcons name="food-drumstick" size={40} />,
+    icon: <MaterialCommunityIcons name="food-drumstick" size={30} />,
   },
-  {label: 'Egg', icon: <Ionicons name="egg" size={40} />},
+  {
+    label: 'Egg',
+    icon: <Ionicons name="egg" size={30} />,
+  },
   {
     label: 'Dairy',
-    icon: <MaterialCommunityIcons name="cow" size={40} />,
+    icon: <MaterialCommunityIcons name="cow" size={30} />,
   },
-  {label: 'Seafood', icon: <Ionicons name="fish" size={40} />},
-  {label: 'Nuts', icon: <MaterialCommunityIcons name="peanut" size={40} />},
+  {
+    label: 'Seafood',
+    icon: <Ionicons name="fish" size={30} />,
+  },
+  {
+    label: 'Nuts',
+    icon: <MaterialCommunityIcons name="peanut" size={30} />,
+  },
   {
     label: 'Gluten',
-    icon: <FontAwesome6 name="wheat-awn" size={40} />,
+    icon: <FontAwesome6 name="wheat-awn" size={30} />,
   },
   {
     label: 'Fruits',
-    icon: <FontAwesome name="apple" size={40} />,
+    icon: <FontAwesome name="apple" size={30} />,
   },
   {
     label: 'Vegetables',
-    icon: <FontAwesome name="leaf" size={40} />,
+    icon: <FontAwesome name="leaf" size={30} />,
   },
   {
     label: 'Other',
-    icon: <MaterialCommunityIcons name="pencil-plus" size={40} />,
+    icon: <MaterialCommunityIcons name="pencil-plus" size={30} />,
   },
 ];
 
@@ -69,52 +71,50 @@ const subOptionsMap: {[key: string]: string[]} = {
   Vegetables: ['Mushroom', 'Carrot', 'Potato', 'Cucumber', 'Green onion'],
 };
 
-function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
-  const {dietRestrictions} = route.params;
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+function DRSecondScreen({navigation}: DRSecondScreenProps) {
+  const [selectedDR, setSelectedDR] = useState<string[]>([]);
+  const [showSubOptions, setShowSubOptions] = useState<{
+    [key: string]: boolean;
+  }>({});
+
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [otherText, setOtherText] = useState('');
   const [isEditingOther, setIsEditingOther] = useState(true);
-  const userId = useSelector((state: any) => state.user.userId);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const initialSelectedOptions: string[] = [];
-    if (dietRestrictions.other) setShowOtherInput(true);
-    setSelectedOptions(initialSelectedOptions);
-  }, [dietRestrictions]);
 
   const handleSelection = (option: string) => {
-    if (selectedOptions.includes(option)) {
-      setSelectedOptions(selectedOptions.filter(item => item !== option));
+    const subOptions = subOptionsMap[option] || [];
+
+    if (subOptions.length > 0) {
+      if (selectedDR.includes(option)) {
+        setSelectedDR(
+          selectedDR.filter(item => ![option, ...subOptions].includes(item)),
+        );
+        setShowSubOptions({...showSubOptions, [option]: false});
+      } else {
+        setSelectedDR([...selectedDR, option, ...subOptions]);
+        setShowSubOptions({...showSubOptions, [option]: true});
+      }
+    } else if (option === 'Other') {
+      if (selectedDR.includes('Other')) {
+        setSelectedDR(selectedDR.filter(item => item !== 'Other'));
+        setShowOtherInput(false);
+        setOtherText('');
+      } else {
+        setSelectedDR([...selectedDR, option]);
+        setShowOtherInput(true);
+        setIsEditingOther(true);
+      }
     } else {
-      setSelectedOptions([...selectedOptions, option]);
+      if (selectedDR.includes(option)) {
+        setSelectedDR(selectedDR.filter(item => item !== option));
+      } else {
+        setSelectedDR([...selectedDR, option]);
+      }
     }
   };
 
-  const handleNextButton = async () => {
-    const requestBody = {userId, other: otherText};
-    try {
-      await api.put('/user/dr2', requestBody, {
-        headers: {'Content-Type': 'application/json'},
-      });
-      Alert.alert('Success', 'Restrictions saved successfully.', [
-        {
-          text: 'Start',
-          onPress: () => {
-            dispatch(login());
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{name: 'MainDrawer'}],
-              }),
-            );
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save data');
-    }
+  const handleNextButton = () => {
+    console.log(selectedDR);
   };
 
   return (
@@ -125,54 +125,91 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
           <Text style={styles.infoText}>
             Select ingredients you should avoid
           </Text>
-          <View style={styles.optionsGrid}>
-            {ingredientOptions.map(option => (
-              <TouchableOpacity
-                key={option.label}
-                style={[
-                  styles.optionCard,
-                  selectedOptions.includes(option.label)
-                    ? styles.optionCardSelected
-                    : null,
-                ]}
-                onPress={() => handleSelection(option.label)}>
-                {option.icon}
-                <Text style={styles.optionText}>{option.label}</Text>
-              </TouchableOpacity>
+          <View style={styles.container}>
+            {ingredientOptions.map(({label, icon}) => (
+              <View key={label} style={styles.optionWrapper}>
+                <TouchableOpacity
+                  style={styles.optionContainer}
+                  onPress={() => handleSelection(label)}>
+                  {icon}
+                  <Text style={styles.optionText}>{label}</Text>
+                  <Ionicons
+                    name={
+                      selectedDR.includes(label)
+                        ? 'checkbox'
+                        : 'checkbox-outline'
+                    }
+                    size={24}
+                    color={colors.ORANGE_800}
+                  />
+                </TouchableOpacity>
+
+                {subOptionsMap[label] && showSubOptions[label] && (
+                  <View style={styles.subOptionsRow}>
+                    {subOptionsMap[label].map(subOption => (
+                      <TouchableOpacity
+                        key={subOption}
+                        style={styles.subOptionContainer}
+                        onPress={() =>
+                          setSelectedDR(prev =>
+                            prev.includes(subOption)
+                              ? prev.filter(item => item !== subOption)
+                              : [...prev, subOption],
+                          )
+                        }>
+                        <Ionicons
+                          name={
+                            selectedDR.includes(subOption)
+                              ? 'checkbox'
+                              : 'checkbox-outline'
+                          }
+                          size={20}
+                          color={colors.ORANGE_200}
+                        />
+                        <Text style={styles.subOptionText}>{subOption}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {label === 'Other' && showOtherInput && (
+                  <View style={styles.otherInputContainer}>
+                    {isEditingOther ? (
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter custom ingredients"
+                        value={otherText}
+                        onChangeText={setOtherText}
+                      />
+                    ) : (
+                      <Text>{otherText}</Text>
+                    )}
+                  </View>
+                )}
+              </View>
             ))}
-          </View>
-          {showOtherInput && (
-            <View style={styles.otherInputContainer}>
-              {isEditingOther ? (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Specify ingredients"
-                  value={otherText}
-                  onChangeText={setOtherText}
+
+            <View style={styles.navigationContainer}>
+              <TouchableOpacity
+                style={styles.navBtn}
+                onPress={() => navigation.goBack()}>
+                <Ionicons
+                  name="chevron-back"
+                  size={24}
+                  color={colors.GRAY_700}
                 />
-              ) : (
-                <Text style={styles.otherText}>{otherText}</Text>
-              )}
-              <Button
-                title={isEditingOther ? 'Submit' : 'Edit'}
-                onPress={() => setIsEditingOther(!isEditingOther)}
-              />
+              </TouchableOpacity>
+              <Text style={styles.pageNumber}>2</Text>
+              <TouchableOpacity
+                style={styles.navBtn}
+                onPress={handleNextButton}>
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={colors.GRAY_700}
+                />
+              </TouchableOpacity>
             </View>
-          )}
-          <View style={styles.navigationContainer}>
-            <TouchableOpacity
-              style={styles.navBtn}
-              onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
-            </TouchableOpacity>
-            <Text style={styles.pageNumber}>2</Text>
-            <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color={colors.GRAY_700}
-              />
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -185,13 +222,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    justifyContent: 'flex-start',
+  scrollContainer: {flexGrow: 1},
+  container: {flex: 1, paddingHorizontal: 15, paddingVertical: 5},
+  optionWrapper: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'column',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   titleText: {
     marginBottom: 15,
@@ -200,63 +243,32 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 20,
-    marginBottom: 20,
+    marginBottom: 10,
   },
-  optionsGrid: {
+  optionContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  optionCard: {
-    width: '48%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    marginVertical: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  optionCardSelected: {
-    backgroundColor: colors.ORANGE_200,
-  },
-  optionText: {
-    marginTop: 10,
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  otherInputContainer: {
-    marginTop: 20,
-  },
+  optionText: {marginLeft: 10, fontSize: 16, fontWeight: '500'},
+  subOptionsRow: {marginLeft: 30, marginTop: 10, flexWrap: 'wrap'},
+  subOptionContainer: {flexDirection: 'row', alignItems: 'center', margin: 5},
+  subOptionText: {marginLeft: 5, fontSize: 14},
+  otherInputContainer: {marginTop: 10},
   input: {
-    height: 40,
-    borderColor: 'gray',
+    borderColor: '#ccc',
     borderWidth: 1,
+    borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  otherText: {
-    fontSize: 16,
-    marginBottom: 10,
+    paddingVertical: 5,
   },
   navigationContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 30,
+    marginTop: 20,
   },
-  navBtn: {
-    padding: 10,
-  },
-  pageNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  navBtn: {padding: 10},
+  pageNumber: {fontSize: 16, fontWeight: 'bold', marginHorizontal: 10},
 });
 
 export default DRSecondScreen;
