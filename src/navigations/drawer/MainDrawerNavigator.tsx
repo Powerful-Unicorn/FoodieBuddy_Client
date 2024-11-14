@@ -1,13 +1,14 @@
 import React, {useState} from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import ChatScreen from '../../screens/chat/ChatScreen';
-import SettingsScreen from '../../screens/settings/SettingsScreen';
+import SettingsScreen from '../../screens/settings/SettingsFirstScreen';
 import BookmarksScreen from '../../screens/bookmarks/BookmarksScreen';
 import {colors, mainNavigations} from '../../constants';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {RouteProp} from '@react-navigation/native';
 import CustomDrawerContent from './CustomDrawerContent';
 import {TouchableOpacity} from 'react-native';
+import SettingsStackNavigator from '../../navigations/stack/SettingsStackNavigator';
 
 export type MainDrawerParamList = {
   [mainNavigations.CHAT]: {showInstruction?: boolean};
@@ -91,7 +92,7 @@ function MainDrawerNavigator() {
       />
       <Drawer.Screen
         name={mainNavigations.SETTINGS}
-        component={SettingsScreen}
+        component={SettingsStackNavigator}
       />
     </Drawer.Navigator>
   );
