@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import ImageInput from './ImageInput';
+import {colors} from '../../constants';
 
 interface MessageInputProps {
   onSend: (
@@ -60,10 +61,11 @@ const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
       <TextInput
         style={styles.input}
         placeholder="Ask me anything"
+        //placeholderTextColor={colors.ORANGE_800}
         value={message}
         onChangeText={setMessage}
       />
-      <Button title="Send" onPress={handleSend} />
+      <Button title="Send" onPress={handleSend} color="#F27059" />
     </View>
   );
 };
@@ -73,6 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    marginTop: 10,
   },
   previewContainer: {
     position: 'relative',
@@ -100,8 +103,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderColor: 'gray',
-    borderWidth: 1,
+    borderColor: colors.ORANGE_800,
+    borderWidth: 2,
     paddingHorizontal: 10,
     height: 40,
     borderRadius: 20,

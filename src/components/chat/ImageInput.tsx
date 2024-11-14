@@ -29,7 +29,7 @@ function ImageInput({onChange}: ImageInputProps) {
 
   return (
     <TouchableOpacity onPress={handleSelectImage} style={styles.imageButton}>
-      <MaterialIcons name="photo" size={30} color="gray" />
+      <MaterialIcons name="photo" size={30} color="#F27059" />
     </TouchableOpacity>
   );
 }

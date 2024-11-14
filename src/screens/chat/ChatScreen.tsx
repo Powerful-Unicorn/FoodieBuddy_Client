@@ -4,7 +4,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -14,8 +13,9 @@ import MessageInput from '../../components/chat/MessageInput';
 import {useWebSocket} from '../../webSocket/websocketHandler';
 import {colors} from '../../constants';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import MessageItem from '../../components/chat/MessageItem';
 
-type MessageItem = {
+type MessageItemType = {
   text?: string;
   sentByUser: boolean;
   imageUri?: string;
@@ -49,7 +49,7 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     currentUrl || '',
     (data: any) => {
       setLoading(false);
-      const parsedMessage: MessageItem =
+      const parsedMessage: MessageItemType =
         typeof data === 'string'
           ? {text: data, sentByUser: false}
           : {text: '', sentByUser: false};
@@ -73,7 +73,7 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       sendMessage(binaryData);
     }
 
-    const payload: MessageItem = {
+    const payload: MessageItemType = {
       text: message,
       imageUri: imageUri || undefined,
       sentByUser: true,
@@ -89,24 +89,23 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     }
   };
 
-  const renderButtons = () => {
-    return (
-      <View style={styles.buttonRow}>
-        {buttons.map((button, index) => (
-          <View key={index} style={styles.buttonWrapper}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleInstructionButtonPress(button.apiUrl)}>
-              <Icon name={button.icon} size={28} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.buttonText}>{button.text}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
+  const renderButtons = () => (
+    <View style={styles.buttonRow}>
+      {buttons.map((button, index) => (
+        <View key={index} style={styles.buttonWrapper}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleInstructionButtonPress(button.apiUrl)}>
+            <Icon name={button.icon} size={28} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.buttonText}>{button.text}</Text>
+        </View>
+      ))}
+    </View>
+  );
 
-  const showInstruction = route.params?.showInstruction ?? true; // 초기값은 true
+  const showInstruction = route.params?.showInstruction ?? true;
+
   return (
     <View style={styles.container}>
       {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
@@ -115,15 +114,7 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
 
       <FlatList
         data={messages}
-        renderItem={({item}) => (
-          <View
-            style={item.sentByUser ? styles.userMessage : styles.botMessage}>
-            {item.imageUri && (
-              <Image source={{uri: item.imageUri}} style={styles.image} />
-            )}
-            {item.text && <Text style={styles.messageText}>{item.text}</Text>}
-          </View>
-        )}
+        renderItem={({item}) => <MessageItem item={item} />}
         keyExtractor={(_, index) => index.toString()}
         contentContainerStyle={styles.flatListContent}
       />
@@ -159,42 +150,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'flex-start',
   },
-  userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#DCF8C6',
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
-    maxWidth: '70%',
-  },
-  botMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#ECECEC',
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
-    maxWidth: '70%',
-  },
-  messageText: {
-    fontSize: 16,
-    color: 'black',
-  },
-  image: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 5,
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: 'gray',
-  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -203,7 +158,7 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     alignItems: 'center',
-    maxWidth: 100, // 버튼과 텍스트의 최대 너비 제한
+    maxWidth: 100,
   },
   button: {
     width: 60,
@@ -219,6 +174,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'black',
     lineHeight: 15,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: 'gray',
   },
 });
 
