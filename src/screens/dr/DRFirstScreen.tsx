@@ -11,6 +11,8 @@ import {
 import {authNavigations, colors} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import axios from 'axios';
@@ -22,20 +24,47 @@ type DRFirstScreenProps = StackScreenProps<
 >;
 
 const dietaryOptions = [
-  'Halal',
-  'Hindu',
-  'Buddist',
-  'Vegan',
-  'Lacto',
-  'Ovo',
-  'Lacto-ovo',
-  'Pescatarian',
-  'Pollotaraian',
+  {
+    label: 'Halal',
+    icon: <MaterialCommunityIcons name="food-halal" size={20} />,
+  },
+  {
+    label: 'Hindu',
+    icon: <MaterialIcons name="temple-hindu" size={20} />,
+  },
+  {
+    label: 'Buddist',
+    icon: <MaterialIcons name="temple-buddhist" size={20} />,
+  },
+  {
+    label: 'Vegan',
+    icon: <MaterialCommunityIcons name="sprout" size={20} />,
+  },
+  {
+    label: 'Lacto',
+    icon: <MaterialCommunityIcons name="sprout" size={20} />,
+  },
+  {
+    label: 'Ovo',
+    icon: <MaterialCommunityIcons name="sprout" size={20} />,
+  },
+  {
+    label: 'Lacto-Ovo',
+    icon: <MaterialCommunityIcons name="sprout" size={20} />,
+  },
+  {
+    label: 'Pescatarian',
+    icon: <MaterialCommunityIcons name="sprout" size={20} />,
+  },
+  {
+    label: 'Pollotarian',
+    icon: <MaterialCommunityIcons name="sprout" size={20} />,
+  },
 ];
 
 function DRFirstScreen({navigation}: DRFirstScreenProps) {
   const [selectedDR, setSelectedDR] = useState<string[]>([]);
-  const userId = useSelector((state: any) => state.user.userId); // Redux에서 userId 가져오기
+  const userId = useSelector((state: any) => state.user.userId);
 
   const handleSelection = (option: string) => {
     if (selectedDR.includes(option)) {
@@ -81,21 +110,24 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
           <Text style={styles.infoText}>Select your dietary restrictions</Text>
           {dietaryOptions.map(option => (
             <View
-              key={option}
+              key={option.label} // key 수정
               style={[styles.optionWrapper, styles.shadowStyle]}>
               <TouchableOpacity
                 style={styles.optionContainer}
-                onPress={() => handleSelection(option)}>
+                onPress={() => handleSelection(option.label)}>
+                {/* label 사용 */}
+                {option.icon}
+                <Text style={styles.optionText}>{option.label}</Text>
+                {/* label 표시 */}
                 <Ionicons
                   name={
-                    selectedDR.includes(option)
+                    selectedDR.includes(option.label)
                       ? 'checkbox'
                       : 'checkbox-outline'
                   }
                   size={24}
                   color={colors.ORANGE_800}
                 />
-                <Text style={styles.optionText}>{option}</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -123,7 +155,7 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff', // SafeAreaView의 배경색
+    backgroundColor: '#fff',
   },
   container: {
     flex: 1,
@@ -136,7 +168,10 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: 'bold',
   },
-  infoText: {fontSize: 20, marginBottom: 5},
+  infoText: {
+    fontSize: 20,
+    marginBottom: 5,
+  },
   optionWrapper: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -153,6 +188,7 @@ const styles = StyleSheet.create({
   optionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   optionText: {
     marginLeft: 10,
