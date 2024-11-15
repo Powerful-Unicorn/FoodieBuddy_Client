@@ -36,12 +36,15 @@ function LoginScreen({navigation}: LoginScreenProps) {
       const response = await api.post('/user/signup', requestBody);
       console.log('Response Data:', response.data);
       dispatch(setUserId(response.data.userId)); // userId를 Redux 상태에 저장
-      Alert.alert('Success', 'User registered successfully!');
+      Alert.alert(
+        '',
+        'Welcome to FoodieBuddy! \n Please select your dietary restrictions.',
+      );
       navigation.navigate(authNavigations.DRFIRST);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          console.log('Error Data:', error.response.data);
+          console.log('Error:', error.response.data);
           Alert.alert(
             'Error',
             error.response.data.message || 'Something went wrong',

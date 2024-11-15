@@ -1,47 +1,38 @@
 import React from 'react';
-import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
-import {colors} from '../../constants';
+import {View, Button, StyleSheet} from 'react-native';
+
 interface ChatbotInstructionProps {
-  buttons: string[];
+  buttons?: string[]; // 버튼 목록
+  onButtonPress?: (url: string) => void; // 버튼 클릭 핸들러
 }
 
-const ChatbotInstruction = ({buttons}: ChatbotInstructionProps) => {
-  const handleButtonPress = (buttonText: string) => {
-    console.log(`${buttonText} 버튼이 클릭됨`);
-    // 버튼 클릭 시 실행할 로직 추가
-  };
+const ChatbotInstruction: React.FC<ChatbotInstructionProps> = ({
+  buttons = [],
+  onButtonPress,
+}) => {
+  if (!buttons || buttons.length === 0) {
+    return null; // 버튼이 없으면 아무것도 렌더링하지 않음
+  }
 
   return (
-    <View style={styles.buttonsContainer}>
-      {buttons.map(button => (
-        <TouchableOpacity
-          key={button}
-          style={styles.button}
-          onPress={() => handleButtonPress(button)}>
-          <Text style={styles.buttonText}>{button}</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      {buttons.map((button, index) => (
+        <Button
+          key={index}
+          title={button}
+          onPress={() => onButtonPress?.(button)} // 클릭 시 부모로 이벤트 전달
+        />
       ))}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  buttonsContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    //backgroundColor: colors.GRAY_200,
-  },
-  button: {
-    backgroundColor: colors.ORANGE_800,
-    padding: 10,
-    borderRadius: 20,
-    marginVertical: 5,
-    alignItems: 'center',
-    width: 180,
-  },
-  buttonText: {
-    color: colors.WHITE,
-    fontWeight: 'bold',
+  container: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10, // 버튼 간의 간격 추가
+    marginTop: 10,
   },
 });
 

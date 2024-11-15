@@ -1,56 +1,112 @@
 import React, {useState} from 'react';
-import {View, TextInput, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  Text,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import ImageInput from './ImageInput';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {colors} from '../../constants';
 
 interface MessageInputProps {
-  onSend: (message: string, imageUri: string | null) => void;
+  onSend: (
+    message: string,
+    imageUri: string | null,
+    binaryData: ArrayBuffer | null,
+  ) => void;
 }
 
-function MessageInput({onSend}: MessageInputProps) {
-  const [inputMessage, setInputMessage] = useState<string>('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
+  const [message, setMessage] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [binaryData, setBinaryData] = useState<ArrayBuffer | null>(null);
 
-  const handleImageInput = (imageUri: string) => {
-    setSelectedImage(imageUri);
-  };
-
-  const handleSendMessage = () => {
-    if (inputMessage.trim() || selectedImage) {
-      onSend(inputMessage, selectedImage);
-      setInputMessage('');
-      setSelectedImage(null);
+  const handleSend = () => {
+    if (message.trim() || imageUri) {
+      onSend(message, imageUri, binaryData);
+      setMessage('');
+      setImageUri(null);
+      setBinaryData(null);
     }
   };
 
+  const handleRemoveImage = () => {
+    setImageUri(null);
+    setBinaryData(null);
+  };
+
   return (
-    <View style={styles.inputContainer}>
-      <ImageInput onChange={handleImageInput} />
+    <View style={styles.container}>
+      <ImageInput
+        onChange={(uri, data) => {
+          setImageUri(uri);
+          setBinaryData(data);
+        }}
+      />
+
+      {imageUri && (
+        <View style={styles.previewContainer}>
+          <Image source={{uri: imageUri}} style={styles.imagePreview} />
+          <TouchableOpacity
+            onPress={handleRemoveImage}
+            style={styles.removeButton}>
+            <Text style={styles.removeButtonText}>X</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <TextInput
-        style={styles.textInput}
+        style={styles.input}
         placeholder="Ask me anything"
-        value={inputMessage}
-        onChangeText={setInputMessage}
+        //placeholderTextColor={colors.ORANGE_800}
+        value={message}
+        onChangeText={setMessage}
       />
-      <TouchableOpacity onPress={handleSendMessage} style={{marginLeft: 10}}>
-        <MaterialIcons name="send" size={28} color={colors.GRAY_500} />
-      </TouchableOpacity>
+      <Button title="Send" onPress={handleSend} color="#F27059" />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  inputContainer: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 10,
   },
-  textInput: {
+  previewContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  imagePreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 5,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
+    borderColor: colors.ORANGE_800,
+    borderWidth: 2,
+    paddingHorizontal: 10,
+    height: 40,
     borderRadius: 20,
   },
 });

@@ -1,13 +1,14 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import ChatScreen from '../../screens/chat/ChatScreen';
-import SettingsScreen from '../../screens/settings/SettingsScreen';
+import SettingsScreen from '../../screens/settings/SettingsFirstScreen';
 import BookmarksScreen from '../../screens/bookmarks/BookmarksScreen';
 import {colors, mainNavigations} from '../../constants';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {RouteProp} from '@react-navigation/native';
 import CustomDrawerContent from './CustomDrawerContent';
 import {TouchableOpacity} from 'react-native';
+import SettingsStackNavigator from '../../navigations/stack/SettingsStackNavigator';
 
 export type MainDrawerParamList = {
   [mainNavigations.CHAT]: {showInstruction?: boolean};
@@ -46,6 +47,8 @@ function DrawerIcons(
 }
 
 function MainDrawerNavigator() {
+  const [isToggled, setIsToggled] = useState(false); // 상태를 컴포넌트 바깥에서 관리
+
   return (
     <Drawer.Navigator
       drawerContent={CustomDrawerContent}
@@ -70,13 +73,15 @@ function MainDrawerNavigator() {
           headerRight: () => (
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate(mainNavigations.CHAT, {
-                  showInstruction: true,
-                });
-                console.log('Plus icon pressed');
+                setIsToggled(prevState => !prevState); // 상태 토글
+                navigation.setParams({showInstruction: !isToggled}); // Params에 전달
               }}
               style={{marginRight: 15}}>
-              <MaterialIcons name="add" size={28} color={colors.ORANGE_800} />
+              <MaterialIcons
+                name={isToggled ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                size={28}
+                color={colors.ORANGE_800}
+              />
             </TouchableOpacity>
           ),
         })}
@@ -87,7 +92,7 @@ function MainDrawerNavigator() {
       />
       <Drawer.Screen
         name={mainNavigations.SETTINGS}
-        component={SettingsScreen}
+        component={SettingsStackNavigator}
       />
     </Drawer.Navigator>
   );
