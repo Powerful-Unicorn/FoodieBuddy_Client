@@ -25,10 +25,6 @@ type DRFirstScreenProps = StackScreenProps<
 
 const dietaryOptions = [
   {
-    label: 'Halal',
-    icon: <MaterialCommunityIcons name="food-halal" size={20} />,
-  },
-  {
     label: 'Hindu',
     icon: <MaterialIcons name="temple-hindu" size={20} />,
   },
