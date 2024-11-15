@@ -17,39 +17,32 @@ import {useSelector} from 'react-redux';
 import api from '../../apis/api';
 import {colors} from '../../constants';
 
+// 인터페이스 정의
+interface DietRestrictions {
+  meat?: string;
+  egg?: boolean;
+  dairy?: string;
+  seafood?: string;
+  nut?: string;
+  gluten?: boolean;
+  fruit?: string;
+  vegetable?: string;
+  other?: string;
+}
+
+// 옵션 및 서브 옵션 정의
 const ingredientOptions = [
   {
     label: 'Meat',
     icon: <MaterialCommunityIcons name="food-drumstick" size={24} />,
   },
-  {
-    label: 'Egg',
-    icon: <Ionicons name="egg" size={24} />,
-  },
-  {
-    label: 'Dairy',
-    icon: <MaterialCommunityIcons name="cow" size={24} />,
-  },
-  {
-    label: 'Seafood',
-    icon: <Ionicons name="fish" size={24} />,
-  },
-  {
-    label: 'Nuts',
-    icon: <MaterialCommunityIcons name="peanut" size={24} />,
-  },
-  {
-    label: 'Gluten',
-    icon: <FontAwesome6 name="wheat-awn" size={24} />,
-  },
-  {
-    label: 'Fruits',
-    icon: <FontAwesome6 name="apple-whole" size={24} />,
-  },
-  {
-    label: 'Vegetables',
-    icon: <FontAwesome name="leaf" size={24} />,
-  },
+  {label: 'Egg', icon: <Ionicons name="egg" size={24} />},
+  {label: 'Dairy', icon: <MaterialCommunityIcons name="cow" size={24} />},
+  {label: 'Seafood', icon: <Ionicons name="fish" size={24} />},
+  {label: 'Nuts', icon: <MaterialCommunityIcons name="peanut" size={24} />},
+  {label: 'Gluten', icon: <FontAwesome6 name="wheat-awn" size={24} />},
+  {label: 'Fruits', icon: <FontAwesome6 name="apple-whole" size={24} />},
+  {label: 'Vegetables', icon: <FontAwesome name="leaf" size={24} />},
   {
     label: 'Other',
     icon: <MaterialCommunityIcons name="pencil-plus" size={24} />,
@@ -75,33 +68,121 @@ function SettingsSecondScreen({navigation}: any) {
   const [otherText, setOtherText] = useState('');
   const [isEditingOther, setIsEditingOther] = useState(false);
 
+  // 데이터 Fetch
   useEffect(() => {
     const fetchDietaryData = async () => {
       try {
         const response = await api.get(`/user/dr/${userId}`);
-        const data = response.data;
+        const dietRestrictions: DietRestrictions = response.data;
 
         const initialSelectedOptions: string[] = [];
         const initialSubOptionsState: {[key: string]: boolean} = {};
 
-        Object.keys(subOptionsMap).forEach(key => {
-          if (data[key.toLowerCase()]) {
-            initialSelectedOptions.push(key);
-            initialSubOptionsState[key] = true;
-            initialSelectedOptions.push(
-              ...subOptionsMap[key].filter(option =>
-                data[key.toLowerCase()].includes(option),
-              ),
-            );
+        // Meat 처리
+        if (dietRestrictions.meat) {
+          if (dietRestrictions.meat === 'all kinds') {
+            initialSelectedOptions.push('Meat', ...subOptionsMap['Meat']);
+            initialSubOptionsState['Meat'] = true;
+          } else {
+            const selectedSubOptions = dietRestrictions.meat
+              .split(', ')
+              .filter((subOption: string) =>
+                subOptionsMap['Meat'].includes(subOption),
+              );
+            if (selectedSubOptions.length > 0) {
+              initialSelectedOptions.push('Meat', ...selectedSubOptions);
+              initialSubOptionsState['Meat'] = true;
+            } else {
+              initialSelectedOptions.push('Meat');
+            }
           }
-        });
+        }
 
-        if (data.egg === true) initialSelectedOptions.push('Egg');
-        if (data.gluten === true) initialSelectedOptions.push('Gluten');
-        if (data.other) {
+        // Boolean 값 처리
+        if (dietRestrictions.egg === true) initialSelectedOptions.push('Egg');
+        if (dietRestrictions.gluten === true)
+          initialSelectedOptions.push('Gluten');
+
+        // Dairy 처리
+        if (dietRestrictions.dairy) {
+          const selectedSubOptions = dietRestrictions.dairy
+            .split(', ')
+            .filter((subOption: string) =>
+              subOptionsMap['Dairy'].includes(subOption),
+            );
+          if (selectedSubOptions.length > 0) {
+            initialSelectedOptions.push('Dairy', ...selectedSubOptions);
+            initialSubOptionsState['Dairy'] = true;
+          } else {
+            initialSelectedOptions.push('Dairy');
+          }
+        }
+
+        // Seafood 처리
+        if (dietRestrictions.seafood) {
+          const selectedSubOptions = dietRestrictions.seafood
+            .split(', ')
+            .filter((subOption: string) =>
+              subOptionsMap['Seafood'].includes(subOption),
+            );
+          if (selectedSubOptions.length > 0) {
+            initialSelectedOptions.push('Seafood', ...selectedSubOptions);
+            initialSubOptionsState['Seafood'] = true;
+          } else {
+            initialSelectedOptions.push('Seafood');
+          }
+        }
+
+        // Nuts 처리
+        if (dietRestrictions.nut) {
+          const selectedSubOptions = dietRestrictions.nut
+            .split(', ')
+            .filter((subOption: string) =>
+              subOptionsMap['Nuts'].includes(subOption),
+            );
+          if (selectedSubOptions.length > 0) {
+            initialSelectedOptions.push('Nuts', ...selectedSubOptions);
+            initialSubOptionsState['Nuts'] = true;
+          } else {
+            initialSelectedOptions.push('Nuts');
+          }
+        }
+
+        // Fruits 처리
+        if (dietRestrictions.fruit) {
+          const selectedSubOptions = dietRestrictions.fruit
+            .split(', ')
+            .filter((subOption: string) =>
+              subOptionsMap['Fruits'].includes(subOption),
+            );
+          if (selectedSubOptions.length > 0) {
+            initialSelectedOptions.push('Fruits', ...selectedSubOptions);
+            initialSubOptionsState['Fruits'] = true;
+          } else {
+            initialSelectedOptions.push('Fruits');
+          }
+        }
+
+        // Vegetables 처리
+        if (dietRestrictions.vegetable) {
+          const selectedSubOptions = dietRestrictions.vegetable
+            .split(', ')
+            .filter((subOption: string) =>
+              subOptionsMap['Vegetables'].includes(subOption),
+            );
+          if (selectedSubOptions.length > 0) {
+            initialSelectedOptions.push('Vegetables', ...selectedSubOptions);
+            initialSubOptionsState['Vegetables'] = true;
+          } else {
+            initialSelectedOptions.push('Vegetables');
+          }
+        }
+
+        // Other 처리
+        if (dietRestrictions.other) {
           initialSelectedOptions.push('Other');
           setShowOtherInput(true);
-          setOtherText(data.other);
+          setOtherText(dietRestrictions.other);
           setIsEditingOther(false);
         }
 
@@ -119,8 +200,10 @@ function SettingsSecondScreen({navigation}: any) {
   const handleSelection = (option: string) => {
     const subOptions = subOptionsMap[option] || [];
 
+    // 부모 옵션 (SubOptions 존재)
     if (subOptions.length > 0) {
       if (selectedOptions.includes(option)) {
+        // 부모 옵션 비활성화: 부모 옵션과 모든 하위 항목 제거
         setSelectedOptions(
           selectedOptions.filter(
             item => item !== option && !subOptions.includes(item),
@@ -128,10 +211,45 @@ function SettingsSecondScreen({navigation}: any) {
         );
         setShowSubOptions({...showSubOptions, [option]: false});
       } else {
+        // 부모 옵션 활성화: 부모 옵션과 모든 하위 항목 추가
         setSelectedOptions([...selectedOptions, option, ...subOptions]);
         setShowSubOptions({...showSubOptions, [option]: true});
       }
-    } else if (option === 'Other') {
+    }
+
+    // 하위 항목 (SubOptions 중 하나)
+    else {
+      const parentOption = Object.keys(subOptionsMap).find(parent =>
+        subOptionsMap[parent].includes(option),
+      );
+
+      if (selectedOptions.includes(option)) {
+        // 하위 항목 비활성화
+        setSelectedOptions(selectedOptions.filter(item => item !== option));
+
+        // 모든 하위 항목이 비활성화되면 부모 옵션 토글 닫기
+        if (
+          parentOption &&
+          subOptionsMap[parentOption].every(
+            subOption =>
+              !selectedOptions.includes(subOption) || subOption === option,
+          )
+        ) {
+          setShowSubOptions({...showSubOptions, [parentOption]: false});
+        }
+      } else {
+        // 하위 항목 활성화
+        setSelectedOptions([...selectedOptions, option]);
+
+        // 부모 옵션 토글 열기
+        if (parentOption) {
+          setShowSubOptions({...showSubOptions, [parentOption]: true});
+        }
+      }
+    }
+
+    // "Other" 옵션
+    if (option === 'Other') {
       if (selectedOptions.includes('Other')) {
         setSelectedOptions(selectedOptions.filter(item => item !== 'Other'));
         setShowOtherInput(false);
@@ -141,7 +259,13 @@ function SettingsSecondScreen({navigation}: any) {
         setShowOtherInput(true);
         setIsEditingOther(true);
       }
-    } else {
+    }
+
+    // 단일 옵션 (부모나 하위 항목이 아닌 경우)
+    else if (
+      !subOptions.length &&
+      !Object.values(subOptionsMap).some(sub => sub.includes(option))
+    ) {
       if (selectedOptions.includes(option)) {
         setSelectedOptions(selectedOptions.filter(item => item !== option));
       } else {
@@ -152,7 +276,6 @@ function SettingsSecondScreen({navigation}: any) {
 
   const handleSaveChanges = async () => {
     const requestBody = {
-      userId,
       meat: selectedOptions.includes('Meat')
         ? selectedOptions
             .filter(item => subOptionsMap['Meat'].includes(item))
@@ -169,18 +292,18 @@ function SettingsSecondScreen({navigation}: any) {
             .filter(item => subOptionsMap['Seafood'].includes(item))
             .join(', ')
         : '',
-      nuts: selectedOptions.includes('Nuts')
+      nut: selectedOptions.includes('Nuts')
         ? selectedOptions
             .filter(item => subOptionsMap['Nuts'].includes(item))
             .join(', ')
         : '',
       gluten: selectedOptions.includes('Gluten'),
-      fruits: selectedOptions.includes('Fruits')
+      fruit: selectedOptions.includes('Fruits')
         ? selectedOptions
             .filter(item => subOptionsMap['Fruits'].includes(item))
             .join(', ')
         : '',
-      vegetables: selectedOptions.includes('Vegetables')
+      vegetable: selectedOptions.includes('Vegetables')
         ? selectedOptions
             .filter(item => subOptionsMap['Vegetables'].includes(item))
             .join(', ')
@@ -281,23 +404,10 @@ function SettingsSecondScreen({navigation}: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  titleText: {
-    marginBottom: 15,
-    fontSize: 25,
-    fontWeight: 'bold',
-  },
-  infoText: {
-    fontSize: 20,
-    marginBottom: 5,
-  },
+  safeArea: {flex: 1, backgroundColor: '#fff'},
+  container: {flexGrow: 1, padding: 20},
+  titleText: {marginBottom: 15, fontSize: 25, fontWeight: 'bold'},
+  infoText: {fontSize: 20, marginBottom: 5},
   optionWrapper: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -314,32 +424,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  optionText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#333',
-  },
-  subOptionsContainer: {
-    marginLeft: 40,
-  },
-  subOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 5,
-  },
-  subOptionText: {
-    marginLeft: 5,
-    fontSize: 14,
-  },
-  otherInputWrapper: {
-    marginTop: 10,
-    padding: 10,
-
-    borderRadius: 10,
-  },
-  centerContainer: {
-    alignItems: 'center',
-  },
+  optionText: {marginLeft: 10, fontSize: 16, color: '#333'},
+  subOptionsContainer: {marginLeft: 40},
+  subOption: {flexDirection: 'row', alignItems: 'center', marginVertical: 5},
+  subOptionText: {marginLeft: 5, fontSize: 14},
+  otherInputWrapper: {marginTop: 10, padding: 10, borderRadius: 10},
+  centerContainer: {alignItems: 'center'},
   input: {
     borderColor: 'gray',
     borderWidth: 1,
@@ -348,10 +438,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     width: '100%',
   },
-  otherText: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
+  otherText: {fontSize: 16, marginBottom: 10},
   submitButton: {
     backgroundColor: colors.ORANGE_800,
     paddingVertical: 8,
@@ -366,11 +453,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
   },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
+  buttonText: {color: '#fff', textAlign: 'center', fontWeight: 'bold'},
   saveButton: {
     backgroundColor: colors.ORANGE_800,
     padding: 15,
@@ -378,11 +461,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  saveButtonText: {color: '#fff', fontSize: 16, fontWeight: 'bold'},
 });
 
 export default SettingsSecondScreen;

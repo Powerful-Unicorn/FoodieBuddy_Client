@@ -121,27 +121,31 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
 
     if (subOptions.length > 0) {
       if (selectedOptions.includes(option)) {
+        // 상위 옵션 해제: 하위 옵션도 모두 제거
         setSelectedOptions(
           selectedOptions.filter(
-            item => ![option, ...subOptions].includes(item),
+            item => item !== option && !subOptions.includes(item),
           ),
         );
         setShowSubOptions({...showSubOptions, [option]: false});
       } else {
+        // 상위 옵션 선택: 하위 옵션도 모두 추가
         setSelectedOptions([...selectedOptions, option, ...subOptions]);
         setShowSubOptions({...showSubOptions, [option]: true});
       }
     } else if (option === 'Other') {
+      // Other 옵션 처리
       if (selectedOptions.includes('Other')) {
         setSelectedOptions(selectedOptions.filter(item => item !== 'Other'));
         setShowOtherInput(false);
         setOtherText('');
       } else {
-        setSelectedOptions([...selectedOptions, option]);
+        setSelectedOptions([...selectedOptions, 'Other']);
         setShowOtherInput(true);
         setIsEditingOther(true);
       }
     } else {
+      // 일반 옵션 처리
       if (selectedOptions.includes(option)) {
         setSelectedOptions(selectedOptions.filter(item => item !== option));
       } else {
@@ -164,37 +168,41 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
   const createRequestBody = () => {
     const body: any = {
       meat: selectedOptions.includes('Meat')
-        ? dietRestrictions.meat === 'all kinds'
-          ? 'all kinds'
-          : selectedOptions
-              .filter(item => subOptionsMap['Meat'].includes(item))
-              .join(', ')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Meat'].includes(item)) // Meat 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
+            .join(', ')
         : '',
       egg: selectedOptions.includes('Egg'),
       dairy: selectedOptions.includes('Dairy')
         ? selectedOptions
-            .filter(item => subOptionsMap['Dairy'].includes(item))
+            .filter(item => subOptionsMap['Dairy'].includes(item)) // Dairy 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       seafood: selectedOptions.includes('Seafood')
         ? selectedOptions
-            .filter(item => subOptionsMap['Seafood'].includes(item))
+            .filter(item => subOptionsMap['Seafood'].includes(item)) // Seafood 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       nut: selectedOptions.includes('Nuts')
         ? selectedOptions
-            .filter(item => subOptionsMap['Nuts'].includes(item))
+            .filter(item => subOptionsMap['Nuts'].includes(item)) // Nuts 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       gluten: selectedOptions.includes('Gluten'),
-      fruit: selectedOptions.includes('Fruits')
+      fruit: selectedOptions.includes('Fruits') // API에서 fruit 사용
         ? selectedOptions
-            .filter(item => subOptionsMap['Fruits'].includes(item))
+            .filter(item => subOptionsMap['Fruits'].includes(item)) // Fruits 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
-      vegetable: selectedOptions.includes('Vegetables')
+      vegetable: selectedOptions.includes('Vegetables') // API에서 vegetable 사용
         ? selectedOptions
-            .filter(item => subOptionsMap['Vegetables'].includes(item))
+            .filter(item => subOptionsMap['Vegetables'].includes(item)) // Vegetables 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       other: otherText,
