@@ -78,105 +78,39 @@ function SettingsSecondScreen({navigation}: any) {
         const initialSelectedOptions: string[] = [];
         const initialSubOptionsState: {[key: string]: boolean} = {};
 
-        // Meat 처리
-        if (dietRestrictions.meat) {
-          if (dietRestrictions.meat === 'all kinds') {
-            initialSelectedOptions.push('Meat', ...subOptionsMap['Meat']);
-            initialSubOptionsState['Meat'] = true;
+        // 부모 옵션과 하위 옵션 설정
+        const setParentAndSubOptions = (
+          parent: string,
+          data: string | undefined,
+        ) => {
+          if (!data) return;
+
+          // 응답 데이터에서 해당 부모 항목의 하위 항목 추출
+          const selectedSubOptions = data
+            .split(', ')
+            .filter(subOption => subOptionsMap[parent]?.includes(subOption));
+
+          // 부모 항목과 하위 항목 모두 선택
+          if (selectedSubOptions.length > 0) {
+            initialSelectedOptions.push(parent); // 부모 항목 추가
+            initialSelectedOptions.push(...selectedSubOptions); // 하위 항목 추가
+            initialSubOptionsState[parent] = true; // 하위 항목 토글 열기
           } else {
-            const selectedSubOptions = dietRestrictions.meat
-              .split(', ')
-              .filter((subOption: string) =>
-                subOptionsMap['Meat'].includes(subOption),
-              );
-            if (selectedSubOptions.length > 0) {
-              initialSelectedOptions.push('Meat', ...selectedSubOptions);
-              initialSubOptionsState['Meat'] = true;
-            } else {
-              initialSelectedOptions.push('Meat');
-            }
+            initialSelectedOptions.push(parent); // 부모 항목만 추가
           }
-        }
+        };
+
+        // Meat, Dairy, Seafood 등 처리
+        setParentAndSubOptions('Meat', dietRestrictions.meat);
+        setParentAndSubOptions('Dairy', dietRestrictions.dairy);
+        setParentAndSubOptions('Seafood', dietRestrictions.seafood);
+        setParentAndSubOptions('Nuts', dietRestrictions.nut);
+        setParentAndSubOptions('Fruits', dietRestrictions.fruit);
+        setParentAndSubOptions('Vegetables', dietRestrictions.vegetable);
 
         // Boolean 값 처리
-        if (dietRestrictions.egg === true) initialSelectedOptions.push('Egg');
-        if (dietRestrictions.gluten === true)
-          initialSelectedOptions.push('Gluten');
-
-        // Dairy 처리
-        if (dietRestrictions.dairy) {
-          const selectedSubOptions = dietRestrictions.dairy
-            .split(', ')
-            .filter((subOption: string) =>
-              subOptionsMap['Dairy'].includes(subOption),
-            );
-          if (selectedSubOptions.length > 0) {
-            initialSelectedOptions.push('Dairy', ...selectedSubOptions);
-            initialSubOptionsState['Dairy'] = true;
-          } else {
-            initialSelectedOptions.push('Dairy');
-          }
-        }
-
-        // Seafood 처리
-        if (dietRestrictions.seafood) {
-          const selectedSubOptions = dietRestrictions.seafood
-            .split(', ')
-            .filter((subOption: string) =>
-              subOptionsMap['Seafood'].includes(subOption),
-            );
-          if (selectedSubOptions.length > 0) {
-            initialSelectedOptions.push('Seafood', ...selectedSubOptions);
-            initialSubOptionsState['Seafood'] = true;
-          } else {
-            initialSelectedOptions.push('Seafood');
-          }
-        }
-
-        // Nuts 처리
-        if (dietRestrictions.nut) {
-          const selectedSubOptions = dietRestrictions.nut
-            .split(', ')
-            .filter((subOption: string) =>
-              subOptionsMap['Nuts'].includes(subOption),
-            );
-          if (selectedSubOptions.length > 0) {
-            initialSelectedOptions.push('Nuts', ...selectedSubOptions);
-            initialSubOptionsState['Nuts'] = true;
-          } else {
-            initialSelectedOptions.push('Nuts');
-          }
-        }
-
-        // Fruits 처리
-        if (dietRestrictions.fruit) {
-          const selectedSubOptions = dietRestrictions.fruit
-            .split(', ')
-            .filter((subOption: string) =>
-              subOptionsMap['Fruits'].includes(subOption),
-            );
-          if (selectedSubOptions.length > 0) {
-            initialSelectedOptions.push('Fruits', ...selectedSubOptions);
-            initialSubOptionsState['Fruits'] = true;
-          } else {
-            initialSelectedOptions.push('Fruits');
-          }
-        }
-
-        // Vegetables 처리
-        if (dietRestrictions.vegetable) {
-          const selectedSubOptions = dietRestrictions.vegetable
-            .split(', ')
-            .filter((subOption: string) =>
-              subOptionsMap['Vegetables'].includes(subOption),
-            );
-          if (selectedSubOptions.length > 0) {
-            initialSelectedOptions.push('Vegetables', ...selectedSubOptions);
-            initialSubOptionsState['Vegetables'] = true;
-          } else {
-            initialSelectedOptions.push('Vegetables');
-          }
-        }
+        if (dietRestrictions.egg) initialSelectedOptions.push('Egg');
+        if (dietRestrictions.gluten) initialSelectedOptions.push('Gluten');
 
         // Other 처리
         if (dietRestrictions.other) {
@@ -186,6 +120,14 @@ function SettingsSecondScreen({navigation}: any) {
           setIsEditingOther(false);
         }
 
+        // 기본적으로 모든 상위 항목의 토글 열기
+        Object.keys(subOptionsMap).forEach(parent => {
+          if (!(parent in initialSubOptionsState)) {
+            initialSubOptionsState[parent] = true; // 기본적으로 열기
+          }
+        });
+
+        // 상태 업데이트
         setSelectedOptions(initialSelectedOptions);
         setShowSubOptions(initialSubOptionsState);
       } catch (error) {

@@ -1,7 +1,16 @@
 import React, {useState} from 'react';
-import {View, Text, Image, StyleSheet, ActivityIndicator} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import ChatbotInstruction from './ChatbotInstruction';
 import {colors} from '../../constants';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface MessageItemProps {
   item: {
@@ -10,11 +19,37 @@ interface MessageItemProps {
     sentByUser?: boolean; // 사용자 메시지 여부 (선택적)
     buttons?: string[]; // 버튼 목록 (선택적)
   };
+  isBookmarked?: boolean; // 북마크 상태
+  onToggleBookmark: (bookmarked: boolean) => void; // 북마크 상태 변경 핸들러
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({item}) => {
+const MessageItem: React.FC<MessageItemProps> = ({
+  item,
+  isBookmarked = false, // 부모로부터 북마크 상태 전달받음
+  onToggleBookmark, // 부모로부터 북마크 상태 변경 핸들러 전달받음
+}) => {
   const [isImageLoading, setIsImageLoading] = useState(!!item.imageUri);
   const [imageLoadError, setImageLoadError] = useState(false);
+
+  // 북마크 클릭 핸들러
+  const handleBookmarkPress = () => {
+    Alert.alert(
+      '북마크',
+      '이 메뉴를 북마크에 저장하겠습니까?',
+      [
+        {
+          text: 'No',
+          onPress: () => onToggleBookmark(false), // 북마크 해제
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => onToggleBookmark(true), // 북마크 설정
+        },
+      ],
+      {cancelable: false},
+    );
+  };
 
   const handleImageLoad = () => {
     setIsImageLoading(false);
@@ -25,22 +60,24 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
     setImageLoadError(true);
   };
 
+  // menu_id 확인 함수
+  const hasMenuId = item.text && item.text.trim().startsWith('{');
+
+  // 메시지에서 `{}` 제거
+  const sanitizeMessage = (message: string): string => {
+    return message.replace(/{.*?}/g, '').trim(); // `{}`와 내부 내용을 제거
+  };
+
   // 텍스트 메시지 파싱 (볼드체 및 해시태그 스타일 적용)
   const renderParsedMessage = (message: string) => {
+    const sanitizedMessage = sanitizeMessage(message);
     const bulletRegex = /^- ?(.*)/gm; // - 뒤 공백 허용
     const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g; // **(내용)** 또는 #해시태그 감지
 
     // 텍스트 분리
-    const parts = message.split(
+    const parts = sanitizedMessage.split(
       new RegExp(`${bulletRegex.source}|${boldAndHashtagRegex.source}`, 'g'),
     );
-
-    // 볼드체 텍스트를 추출하여 중복 제거 준비
-    const boldTexts: string[] = [];
-    message.replace(boldAndHashtagRegex, (match, _, boldText) => {
-      if (boldText) boldTexts.push(boldText.trim());
-      return match;
-    });
 
     return parts
       .filter(part => part) // undefined 또는 빈 문자열 제거
@@ -66,21 +103,6 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
             </View>
           );
         } else {
-          // 중복 제거: 볼드체 텍스트와 동일한 내용이면 제외
-          const isDuplicate = boldTexts.some(boldText =>
-            part.trim().startsWith(boldText),
-          );
-          if (isDuplicate) {
-            const cleanedText = boldTexts.reduce(
-              (text, boldText) => text.replace(boldText, '').trim(),
-              part.trim(),
-            );
-            return cleanedText ? (
-              <Text key={index} style={styles.normalText}>
-                {cleanedText}
-              </Text>
-            ) : null;
-          }
           return (
             <Text key={index} style={styles.normalText}>
               {part.trim()}
@@ -89,7 +111,6 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
         }
       });
   };
-
   if (!item.text && !item.imageUri && !item.buttons?.length) {
     return null;
   }
@@ -118,16 +139,24 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
           )}
         </View>
       )}
-
-      {/* 텍스트 메시지 렌더링 */}
-      {item.text && (
-        <Text style={styles.messageText}>{renderParsedMessage(item.text)}</Text>
+      {/* 북마크 아이콘 */}
+      {hasMenuId && (
+        <TouchableOpacity
+          style={styles.bookmarkIcon}
+          onPress={handleBookmarkPress}
+          hitSlop={{top: 40, bottom: 40, left: 40, right: 40}}>
+          <Icon
+            name={isBookmarked ? 'bookmark' : 'bookmark-border'}
+            size={30}
+            color={isBookmarked ? colors.ORANGE_500 : colors.GRAY_500}
+          />
+        </TouchableOpacity>
       )}
 
-      {/* 버튼 렌더링 */}
-      {item.buttons && item.buttons.length > 0 && (
-        <ChatbotInstruction buttons={item.buttons} />
-      )}
+      {/* 메시지 텍스트 렌더링 */}
+      <Text style={styles.messageText}>
+        {renderParsedMessage(item.text || '')}
+      </Text>
     </View>
   );
 };
@@ -138,6 +167,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     maxWidth: '70%',
+    position: 'relative', // 북마크 아이콘 위치를 위한 설정
   },
   sentMessage: {
     backgroundColor: colors.YELLOW_200,
@@ -168,7 +198,7 @@ const styles = StyleSheet.create({
     color: colors.BLACK,
   },
   boldText: {
-    fontWeight: 'bold', // 볼드체 스타일
+    fontWeight: 'bold',
     color: colors.BLACK,
   },
   normalText: {
@@ -176,7 +206,7 @@ const styles = StyleSheet.create({
     color: colors.BLACK,
   },
   hashtagText: {
-    color: colors.ORANGE_800, // 해시태그 색상 변경
+    color: colors.ORANGE_800,
     fontWeight: 'bold',
   },
   bulletContainer: {
@@ -190,8 +220,13 @@ const styles = StyleSheet.create({
     color: colors.BLACK,
   },
   bulletText: {
-    color: colors.BLACK, // 불릿 텍스트 색상
+    color: colors.BLACK,
     fontSize: 16,
+  },
+  bookmarkIcon: {
+    position: 'absolute',
+    bottom: 5, // 하단 위치
+    right: 5, // 오른쪽 위치
   },
 });
 
