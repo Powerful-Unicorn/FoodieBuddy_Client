@@ -10,7 +10,7 @@ import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import axios from 'axios';
 import {useDispatch} from 'react-redux';
-import {setUserId} from '../../states/userSlice'; // Redux 액션 가져오기
+import {setUserId} from '../../states/userSlice';
 
 type LoginScreenProps = StackScreenProps<
   AuthStackParamList,
@@ -24,43 +24,49 @@ function LoginScreen({navigation}: LoginScreenProps) {
     validate: validateLogin,
   });
 
-  const dispatch = useDispatch(); // Redux dispatch 함수 가져오기
+  const dispatch = useDispatch();
+  const handleLogin = async () => {
+    const {email, password} = login.values;
 
-  const handleSignup = async () => {
-    const requestBody = {
-      email: login.values.email,
-      password: login.values.password,
-    };
+    console.log('Request Params:', {email, password}); // 요청 매개변수 출력
 
     try {
-      const response = await api.post('/user/signup', requestBody);
-      console.log('Response Data:', response.data);
-      dispatch(setUserId(response.data.userId)); // userId를 Redux 상태에 저장
-      Alert.alert(
-        '',
-        'Welcome to FoodieBuddy! \n Please select your dietary restrictions.',
-      );
-      navigation.navigate(authNavigations.DRFIRST);
+      // GET 요청으로 로그인
+      const requestBody = {
+        email,
+        password,
+      };
+      const response = await api.post('/user/login', requestBody);
+
+      console.log('Response Data:', response.data); // 응답 데이터 출력
+
+      // 사용자 ID를 Redux에 저장ㅁ
+      dispatch(setUserId(response.data.userId));
+
+      Alert.alert('', 'Login successful!');
+
+      // 채팅 화면으로 이동
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'MainDrawerNavigator'}],
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response) {
-          console.log('Error:', error.response.data);
-          Alert.alert(
-            'Error',
-            error.response.data.message || 'Something went wrong',
-          );
-        } else {
-          Alert.alert('Error', 'Failed to sign up');
-        }
+        console.error('Error Response Data:', error.response?.data); // 에러 응답 출력
+        Alert.alert(
+          'Login Failed',
+          error.response?.data?.message || 'Invalid email or password',
+        );
       } else {
+        console.error('Unexpected Error:', error);
         Alert.alert('Error', 'An unexpected error occurred');
-        console.error('Unexpected error:', error);
       }
     }
   };
 
   const handleSubmit = () => {
-    handleSignup();
+    console.log('Submitted Values:', login.values); // 제출된 값 출력
+    handleLogin();
   };
 
   return (
@@ -83,7 +89,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
           error={login.errors.password}
           touched={login.touched.password}
           secureTextEntry
-          returnKeyType="join"
+          returnKeyType="done"
           onSubmitEditing={handleSubmit}
           {...login.getTextInputProps('password')}
         />
