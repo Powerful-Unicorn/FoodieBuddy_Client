@@ -24,6 +24,7 @@ type MessageItemType = {
 
 const ChatScreen: React.FC<{route: any}> = ({route}) => {
   const dispatch = useDispatch();
+  const userId = route.params?.userId;
   const {messages: websocketMessages} = useSelector(
     (state: RootState) => state.websocket,
   );
@@ -35,7 +36,7 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
   React.useEffect(() => {
     const updatedMessages = websocketMessages.map(message => ({
       ...message,
-      isBookmarked: false, // 초기 북마크 상태 추가
+      isBookmarked: false, //
     }));
     setMessages(updatedMessages);
   }, [websocketMessages]);
@@ -53,17 +54,17 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     {
       icon: 'question-mark',
       text: 'Recommend Food',
-      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/recommendation',
+      apiUrl: `ws://api.foodiebuddy.kro.kr:8000/recommendation/${userId}`,
     },
     {
       icon: 'menu-book',
       text: 'Explain\nMenu Board',
-      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askmenu',
+      apiUrl: `ws://api.foodiebuddy.kro.kr:8000/askmenu/${userId}`,
     },
     {
       icon: 'egg-alt',
       text: 'Explain\nSide Dish',
-      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askdish',
+      apiUrl: `ws://api.foodiebuddy.kro.kr:8000/askdish/${userId}`,
     },
   ];
 
@@ -105,7 +106,8 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       isBookmarked: false, // 초기 북마크 상태
     };
 
-    // Redux 상태에 메시지 추가
+    // Redu
+
     dispatch({
       type: 'WEBSOCKET_MESSAGE',
       payload,

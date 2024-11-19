@@ -51,6 +51,7 @@ function MainDrawerNavigator() {
 
   return (
     <Drawer.Navigator
+      initialRouteName={mainNavigations.CHAT}
       drawerContent={CustomDrawerContent}
       screenOptions={({route}) => ({
         drawerType: 'front',

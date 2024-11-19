@@ -13,15 +13,12 @@ import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import axios from 'axios';
 import {useSelector} from 'react-redux';
+import {RootStackParamList} from '../../navigations/root/RootNavigator';
 
-type DRFirstScreenProps = StackScreenProps<
-  AuthStackParamList,
-  typeof authNavigations.DRFIRST
->;
+type DRFirstScreenProps = StackScreenProps<RootStackParamList, 'DRFirst'>;
 
 const dietaryOptions = [
   {
@@ -82,7 +79,7 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
         headers: {'Content-Type': 'application/json'},
       });
 
-      navigation.navigate(authNavigations.DRSECOND, {
+      navigation.navigate('DRSecond', {
         selectedDR: selectedDR.join(', '),
         dietRestrictions: response.data,
       });

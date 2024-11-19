@@ -16,17 +16,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import {authNavigations, colors, mainNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
-import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import {useSelector} from 'react-redux';
 import {CommonActions} from '@react-navigation/native';
 import {login} from '../../states/authSlice';
 import {useDispatch} from 'react-redux';
+import {RootStackParamList} from '../../navigations/root/RootNavigator';
 
-type DRSecondScreenProps = StackScreenProps<
-  AuthStackParamList,
-  typeof authNavigations.DRSECOND
->;
+type DRSecondScreenProps = StackScreenProps<RootStackParamList, 'DRSecond'>;
 
 const ingredientOptions = [
   {
@@ -233,7 +230,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{name: 'MainDrawer'}],
+                  routes: [{name: 'MainDrawerNavigator'}],
                 }),
               );
             },
