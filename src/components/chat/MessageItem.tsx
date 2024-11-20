@@ -71,46 +71,48 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // 텍스트 메시지 파싱 (볼드체 및 해시태그 스타일 적용)
   const renderParsedMessage = (message: string) => {
     const sanitizedMessage = sanitizeMessage(message);
-    const bulletRegex = /^- ?(.*)/gm; // - 뒤 공백 허용
-    const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g; // **(내용)** 또는 #해시태그 감지
+    const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g; // **볼드체** 또는 #해시태그 추출
 
-    // 텍스트 분리
-    const parts = sanitizedMessage.split(
-      new RegExp(`${bulletRegex.source}|${boldAndHashtagRegex.source}`, 'g'),
-    );
+    // 정규식을 기준으로 텍스트를 분리
+    const parts = sanitizedMessage
+      .split(boldAndHashtagRegex)
+      .filter(part => part);
 
-    return parts
-      .filter(part => part) // undefined 또는 빈 문자열 제거
-      .map((part, index) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.slice(2, -2).trim(); // ** 제거
-          return (
-            <Text key={index} style={styles.boldText}>
-              {content}
-            </Text>
-          );
-        } else if (part.startsWith('#')) {
-          return (
-            <Text key={index} style={styles.hashtagText}>
-              {part}
-            </Text>
-          );
-        } else if (part.startsWith('- ')) {
-          return (
-            <View key={index} style={styles.bulletContainer}>
-              <Text style={styles.bulletPoint}>•</Text>
-              <Text style={styles.bulletText}>{part.slice(2).trim()}</Text>
-            </View>
-          );
-        } else {
+    // 중복 제거를 위한 세트 (이미 렌더링된 부분 기억)
+    const renderedBoldTexts = new Set<string>();
+
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // **볼드체 텍스트**
+        const content = part.slice(2, -2).trim();
+        renderedBoldTexts.add(content); // 볼드체로 렌더링된 부분 추가
+        return (
+          <Text key={index} style={styles.boldText}>
+            {content}
+          </Text>
+        );
+      } else if (part.startsWith('#')) {
+        // #해시태그
+        return (
+          <Text key={index} style={styles.hashtagText}>
+            {part}
+          </Text>
+        );
+      } else {
+        // 일반 텍스트 (볼드체와 중복되지 않은 경우만 렌더링)
+        const trimmedPart = part.trim();
+        if (!renderedBoldTexts.has(trimmedPart)) {
           return (
             <Text key={index} style={styles.normalText}>
-              {part.trim()}
+              {trimmedPart}
             </Text>
           );
         }
-      });
+        return null; // 중복된 경우 렌더링하지 않음
+      }
+    });
   };
+
   if (!item.text && !item.imageUri && !item.buttons?.length) {
     return null;
   }
