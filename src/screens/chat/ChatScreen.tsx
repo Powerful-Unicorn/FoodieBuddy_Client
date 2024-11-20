@@ -23,8 +23,16 @@ type MessageItemType = {
 };
 
 const ChatScreen: React.FC<{route: any}> = ({route}) => {
-  const dispatch = useDispatch();
   const userId = route.params?.userId;
+
+  // 디버깅용 로그 추가
+  React.useEffect(() => {
+    console.log('[ChatScreen] Loaded with userId:', userId);
+    if (!userId) {
+      console.warn('[ChatScreen] No userId received.');
+    }
+  }, [userId]);
+  const dispatch = useDispatch();
   const {messages: websocketMessages} = useSelector(
     (state: RootState) => state.websocket,
   );

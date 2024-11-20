@@ -230,7 +230,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{name: 'MainDrawerNavigator'}],
+                  routes: [{name: 'Onboarding'}],
                 }),
               );
             },

@@ -33,13 +33,18 @@ function LoginScreen({navigation}: LoginScreenProps) {
 
     try {
       const response = await api.post('/user/login', {email, password});
+      const userId = response.data.userId;
       dispatch(setUserId(response.data.userId));
       Alert.alert('', 'Login successful!');
+      // 디버깅용 로그 추가
+      console.log('[LoginScreen] Login successful. Received userId:', userId);
 
+      // Redux에 userId 저장
+      dispatch(setUserId(userId));
       // MainDrawerNavigator로 이동 (스택 초기화)
       navigation.reset({
         index: 0,
-        routes: [{name: 'MainDrawerNavigator'}],
+        routes: [{name: 'MainDrawerNavigator', params: {userId}}],
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {

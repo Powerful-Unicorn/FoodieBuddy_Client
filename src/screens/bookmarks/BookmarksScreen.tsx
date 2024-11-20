@@ -1,11 +1,20 @@
-import React, {useState} from 'react';
-import {StyleSheet, SafeAreaView, View, Text, Alert} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  SafeAreaView,
+  View,
+  Text,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import {SwipeListView} from 'react-native-swipe-list-view';
 import BookmarkContainer from '../../components/BookmarkContainer';
 import {RectButton} from 'react-native-gesture-handler';
+import axios from 'axios';
 import {colors} from '../../constants';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../states/store'; // Redux 상태 타입 가져오기
 
-// Define the type for a bookmark item
 interface Bookmark {
   id: string;
   title: string;
@@ -14,17 +23,34 @@ interface Bookmark {
 }
 
 const BookmarksScreen = () => {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([
-    {id: '1', title: 'Bean Sprout Soup', subtitle: 'Kongnamulguk', rating: 0},
-    {id: '2', title: 'Grilled Pork Belly', subtitle: 'Samgyeopsal', rating: 0},
-    {id: '3', title: 'Dumpling Soup', subtitle: 'Mandutguk', rating: 0},
-    {id: '4', title: 'Dumpling Soup', subtitle: 'Mandutguk', rating: 0},
-  ]);
+  const userId = useSelector((state: RootState) => state.user.userId); // Redux에서 userId 가져오기
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [loading, setLoading] = useState(true); // 로딩 상태 관리
+
+  // 북마크 목록을 가져오는 함수
+  const fetchBookmarks = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/menu/${userId}`); // Redux에서 가져온 userId 사용
+      setBookmarks(response.data); // 서버에서 받은 데이터를 상태로 설정
+    } catch (error) {
+      console.error('Failed to fetch bookmarks:', error);
+      Alert.alert('Error', 'Failed to load bookmarks. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchBookmarks(); // userId가 존재할 경우에만 API 호출
+    }
+  }, [userId]);
 
   const deleteBookmark = (id: string) => {
     Alert.alert(
-      '', // Empty string for the title
-      'Are you sure you want to delete this bookmark?', // Message
+      '',
+      'Are you sure you want to delete this bookmark?',
       [
         {
           text: 'Cancel',
@@ -63,6 +89,23 @@ const BookmarksScreen = () => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.GRAY_500} />
+        <Text style={styles.loadingText}>Loading bookmarks...</Text>
+      </View>
+    );
+  }
+
+  if (bookmarks.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No bookmarks found.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
       <SafeAreaView style={styles.container}>
@@ -70,7 +113,7 @@ const BookmarksScreen = () => {
           data={bookmarks}
           renderItem={renderItem}
           renderHiddenItem={renderHiddenItem}
-          rightOpenValue={-75} // Adjust the swipe distance as needed
+          rightOpenValue={-75}
           keyExtractor={item => item.id}
         />
       </SafeAreaView>
@@ -85,15 +128,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    //backgroundColor: colors.WHITE,
     margin: 30,
   },
   rowBack: {
     alignItems: 'center',
-    height: 105, // Height adjusted to match BookmarkContainer
+    height: 105,
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    //paddingRight: 15,
     borderRadius: 8,
   },
   deleteButton: {
@@ -101,13 +142,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'red',
     width: 75,
-    height: '100%', // 부모의 높이에 맞게 설정
+    height: '100%',
     borderRadius: 8,
   },
   deleteText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.WHITE,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: colors.GRAY_500,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.WHITE,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: colors.GRAY_500,
   },
 });
 

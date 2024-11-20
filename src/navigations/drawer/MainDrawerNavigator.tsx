@@ -11,7 +11,7 @@ import {TouchableOpacity} from 'react-native';
 import SettingsStackNavigator from '../../navigations/stack/SettingsStackNavigator';
 
 export type MainDrawerParamList = {
-  [mainNavigations.CHAT]: {showInstruction?: boolean};
+  [mainNavigations.CHAT]: {showInstruction?: boolean; userId?: string};
   [mainNavigations.BOOKMARKS]: undefined;
   [mainNavigations.SETTINGS]: undefined;
 };
@@ -46,9 +46,10 @@ function DrawerIcons(
   );
 }
 
-function MainDrawerNavigator() {
+function MainDrawerNavigator({route}: any) {
   const [isToggled, setIsToggled] = useState(false); // 상태를 컴포넌트 바깥에서 관리
-
+  const userId = route.params?.userId;
+  console.log('[MainDrawerNavigator] Received userId:', userId);
   return (
     <Drawer.Navigator
       initialRouteName={mainNavigations.CHAT}
@@ -69,6 +70,7 @@ function MainDrawerNavigator() {
       <Drawer.Screen
         name={mainNavigations.CHAT}
         component={ChatScreen}
+        initialParams={{userId, showInstruction: true}}
         options={({navigation}) => ({
           swipeEnabled: false, // swipe 방지
           headerRight: () => (
