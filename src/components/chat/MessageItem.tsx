@@ -141,6 +141,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
           )}
         </View>
       )}
+
       {/* 북마크 아이콘 */}
       {hasMenuId && (
         <TouchableOpacity

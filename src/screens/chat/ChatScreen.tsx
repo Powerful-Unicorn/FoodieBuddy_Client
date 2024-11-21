@@ -85,7 +85,24 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
         typeof data === 'string'
           ? {text: data, sentByUser: false, isBookmarked: false}
           : {text: '', sentByUser: false, isBookmarked: false};
-      dispatch({type: 'WEBSOCKET_MESSAGE', payload: parsedMessage});
+
+      if (data.type === 'text') {
+        // 텍스트 메시지 수신
+        const textMessage: MessageItemType = {
+          text: data.text,
+          sentByUser: false,
+          isBookmarked: false,
+        };
+        dispatch({type: 'WEBSOCKET_MESSAGE', payload: textMessage});
+      } else if (data.type === 'image') {
+        // 이미지 메시지 수신
+        const imageMessage: MessageItemType = {
+          imageUri: data.imageUrl,
+          sentByUser: false,
+          isBookmarked: false,
+        };
+        dispatch({type: 'WEBSOCKET_MESSAGE', payload: imageMessage});
+      }
     },
   );
 
