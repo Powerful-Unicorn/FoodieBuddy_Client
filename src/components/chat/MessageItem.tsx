@@ -99,16 +99,26 @@ const MessageItem: React.FC<MessageItemProps> = ({
           </Text>
         );
       } else {
-        // 일반 텍스트 (볼드체와 중복되지 않은 경우만 렌더링)
-        const trimmedPart = part.trim();
-        if (!renderedBoldTexts.has(trimmedPart)) {
+        // 일반 텍스트 처리 및 줄바꿈 (\n) 유지
+        const lines = part.split('\n'); // 줄바꿈 기준으로 나눔
+
+        return lines.map((line, lineIndex) => {
+          const trimmedLine = line.trim();
+
+          if (renderedBoldTexts.has(trimmedLine)) {
+            // 중복된 텍스트는 렌더링하지 않음
+            return null;
+          }
+
+          // 일반 텍스트 렌더링
+          renderedBoldTexts.add(trimmedLine); // 렌더링된 텍스트로 추가
           return (
-            <Text key={index} style={styles.normalText}>
-              {trimmedPart}
+            <Text key={`line-${index}-${lineIndex}`} style={styles.normalText}>
+              {trimmedLine}
+              {lineIndex < lines.length - 1 && '\n'}
             </Text>
           );
-        }
-        return null; // 중복된 경우 렌더링하지 않음
+        });
       }
     });
   };
@@ -148,11 +158,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
           style={styles.bookmarkIcon}
           onPress={handleBookmarkPress}
           hitSlop={{top: 40, bottom: 40, left: 40, right: 40}}>
-          <Icon
+          {/* <Icon
             name={isBookmarked ? 'bookmark' : 'bookmark-border'}
             size={30}
             color={isBookmarked ? colors.ORANGE_500 : colors.GRAY_500}
-          />
+          /> */}
         </TouchableOpacity>
       )}
 

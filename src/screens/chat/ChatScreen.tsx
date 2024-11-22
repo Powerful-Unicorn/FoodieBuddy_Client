@@ -88,6 +88,8 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
 
       if (data.type === 'text') {
         // 텍스트 메시지 수신
+        console.log('[ChatScreen] Received text message:', data.text);
+
         const textMessage: MessageItemType = {
           text: data.text,
           sentByUser: false,
