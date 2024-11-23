@@ -71,53 +71,54 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // 텍스트 메시지 파싱 (볼드체 및 해시태그 스타일 적용)
   const renderParsedMessage = (message: string) => {
     const sanitizedMessage = sanitizeMessage(message);
-    const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g; // **볼드체** 또는 #해시태그 추출
+    const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g;
 
-    // 정규식을 기준으로 텍스트를 분리
     const parts = sanitizedMessage
       .split(boldAndHashtagRegex)
       .filter(part => part);
 
-    // 중복 제거를 위한 세트 (이미 렌더링된 부분 기억)
+    // 중복 제거를 위한 Set
     const renderedBoldTexts = new Set<string>();
 
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        // **볼드체 텍스트**
+        // **볼드체 텍스트** 처리
         const content = part.slice(2, -2).trim();
-        renderedBoldTexts.add(content); // 볼드체로 렌더링된 부분 추가
-        return (
-          <Text key={index} style={styles.boldText}>
-            {content}
-          </Text>
-        );
+        if (!renderedBoldTexts.has(content)) {
+          renderedBoldTexts.add(content);
+          return (
+            <Text key={index} style={styles.boldText}>
+              {content}
+            </Text>
+          );
+        }
+        return null; // 중복된 경우 렌더링하지 않음
       } else if (part.startsWith('#')) {
-        // #해시태그
+        // #해시태그 처리
         return (
           <Text key={index} style={styles.hashtagText}>
             {part}
           </Text>
         );
       } else {
-        // 일반 텍스트 처리 및 줄바꿈 (\n) 유지
-        const lines = part.split('\n'); // 줄바꿈 기준으로 나눔
-
+        // 일반 텍스트 처리 및 줄바꿈 유지
+        const lines = part.split('\n');
         return lines.map((line, lineIndex) => {
           const trimmedLine = line.trim();
 
-          if (renderedBoldTexts.has(trimmedLine)) {
-            // 중복된 텍스트는 렌더링하지 않음
-            return null;
+          if (!renderedBoldTexts.has(trimmedLine)) {
+            renderedBoldTexts.add(trimmedLine);
+            return (
+              <React.Fragment key={`line-${index}-${lineIndex}`}>
+                <Text style={styles.normalText}>{trimmedLine}</Text>
+                {lineIndex < lines.length - 1 && (
+                  // 줄바꿈과 한 줄 띄어쓰기를 추가
+                  <Text style={styles.normalText}>{'\n\n'}</Text>
+                )}
+              </React.Fragment>
+            );
           }
-
-          // 일반 텍스트 렌더링
-          renderedBoldTexts.add(trimmedLine); // 렌더링된 텍스트로 추가
-          return (
-            <Text key={`line-${index}-${lineIndex}`} style={styles.normalText}>
-              {trimmedLine}
-              {lineIndex < lines.length - 1 && '\n'}
-            </Text>
-          );
+          return null; // 중복된 경우 렌더링하지 않음
         });
       }
     });
