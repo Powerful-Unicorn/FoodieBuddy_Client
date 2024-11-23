@@ -96,6 +96,9 @@ function MainDrawerNavigator({route}: any) {
       <Drawer.Screen
         name={mainNavigations.SETTINGS}
         component={SettingsStackNavigator}
+        options={({navigation}) => ({
+          swipeEnabled: false, // swipe 방지
+        })}
       />
     </Drawer.Navigator>
   );

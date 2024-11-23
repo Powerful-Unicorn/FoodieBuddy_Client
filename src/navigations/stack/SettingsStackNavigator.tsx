@@ -3,8 +3,11 @@ import {createStackNavigator} from '@react-navigation/stack';
 import SettingsFirstScreen from '../../screens/settings/SettingsFirstScreen';
 import SettingsSecondScreen from '../../screens/settings/SettingsSceondScreen';
 import {colors} from '../../constants';
-
+import SettingsMainScreen from '../../screens/settings/SettingsMainScreen';
+import {TouchableOpacity} from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 export type SettingsStackParamList = {
+  SettingsMainScreen: undefined;
   SettingsFirstScreen: undefined;
   SettingsSecondScreen: {selectedDR: string[]};
 };
@@ -18,14 +21,17 @@ function SettingsStackNavigator() {
         headerShown: false,
       }}>
       <Stack.Screen
+        name="SettingsMainScreen"
+        component={SettingsMainScreen}
+        options={{title: 'Settings'}}
+      />
+      <Stack.Screen
         name="SettingsFirstScreen"
         component={SettingsFirstScreen}
-        options={{title: 'Settings - Step 1'}}
       />
       <Stack.Screen
         name="SettingsSecondScreen"
         component={SettingsSecondScreen}
-        options={{title: 'Settings - Step 2'}}
       />
     </Stack.Navigator>
   );
