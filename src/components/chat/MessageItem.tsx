@@ -159,11 +159,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
           style={styles.bookmarkIcon}
           onPress={handleBookmarkPress}
           hitSlop={{top: 40, bottom: 40, left: 40, right: 40}}>
-          {/* <Icon
+          <Icon
             name={isBookmarked ? 'bookmark' : 'bookmark-border'}
-            size={30}
+            size={40}
             color={isBookmarked ? colors.ORANGE_500 : colors.GRAY_500}
-          /> */}
+          />
         </TouchableOpacity>
       )}
 
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   bookmarkIcon: {
     position: 'absolute',
-    bottom: 5, // 하단 위치
+    top: 5, // 상단 위치
     right: 5, // 오른쪽 위치
   },
 });
