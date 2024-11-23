@@ -6,10 +6,9 @@ import {
   Text,
   Alert,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
-import {SwipeListView} from 'react-native-swipe-list-view';
 import BookmarkContainer from '../../components/BookmarkContainer';
-import {RectButton} from 'react-native-gesture-handler';
 import {colors} from '../../constants';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../states/store';
@@ -28,6 +27,7 @@ const BookmarksScreen = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 북마크 데이터 가져오기
   const fetchBookmarks = async () => {
     try {
       setLoading(true);
@@ -41,18 +41,7 @@ const BookmarksScreen = () => {
     }
   };
 
-  const addBookmark = async (menuId: number) => {
-    try {
-      const response = await api.patch(`/menu/bookmark/${userId}`, {menuId});
-      const updatedBookmark = response.data;
-      setBookmarks(prevBookmarks => [...prevBookmarks, updatedBookmark]);
-      Alert.alert('Success', 'Bookmark added successfully!');
-    } catch (error) {
-      console.error('Failed to add bookmark:', error);
-      Alert.alert('Error', 'Failed to add bookmark.');
-    }
-  };
-
+  // 북마크 삭제
   const deleteBookmark = (menuId: number) => {
     Alert.alert('', 'Are you sure you want to delete this bookmark?', [
       {text: 'Cancel', style: 'cancel'},
@@ -68,20 +57,33 @@ const BookmarksScreen = () => {
     ]);
   };
 
+  // 별점 업데이트
+  const updateStarRating = (menuId: number, newRating: number) => {
+    setBookmarks(prevBookmarks =>
+      prevBookmarks.map(bookmark =>
+        bookmark.menuId === menuId
+          ? {...bookmark, star: newRating} // 별점 수정
+          : bookmark,
+      ),
+    );
+  };
+
   useEffect(() => {
     if (userId) {
       fetchBookmarks();
     }
   }, [userId]);
 
+  // FlatList의 렌더링 아이템
   const renderItem = ({item}: {item: Bookmark}) => (
     <BookmarkContainer
       title={item.name}
       subtitle={item.pronunciation}
       star={item.star}
-      // isBookmarked={item.isBookmarked}
-      // onBookmark={() => addBookmark(item.menuId)}
-      onDelete={() => deleteBookmark(item.menuId)}
+      onDelete={() => deleteBookmark(item.menuId)} // 삭제 핸들러
+      onStarPress={
+        (rating: number) => updateStarRating(item.menuId, rating) // 별점 핸들러
+      }
     />
   );
 
@@ -98,10 +100,11 @@ const BookmarksScreen = () => {
         </View>
       ) : (
         <SafeAreaView style={styles.container}>
-          <SwipeListView
+          <FlatList
             data={bookmarks}
             renderItem={renderItem}
             keyExtractor={item => item.menuId.toString()}
+            contentContainerStyle={{paddingBottom: 20}} // 여백 추가
           />
         </SafeAreaView>
       )}

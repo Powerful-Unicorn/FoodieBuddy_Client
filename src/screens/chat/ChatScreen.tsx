@@ -165,9 +165,6 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
 
   return (
     <View style={styles.container}>
-      {/* 연결 상태 표시 */}
-      {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
-
       {/* 안내 버튼 */}
       {showInstruction && renderButtons()}
 
