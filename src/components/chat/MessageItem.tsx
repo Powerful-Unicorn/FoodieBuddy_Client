@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import ChatbotInstruction from './ChatbotInstruction';
 import {colors} from '../../constants';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -34,17 +33,21 @@ const MessageItem: React.FC<MessageItemProps> = ({
   // 북마크 클릭 핸들러
   const handleBookmarkPress = () => {
     Alert.alert(
-      '북마크',
-      '이 메뉴를 북마크에 저장하겠습니까?',
+      '',
+      isBookmarked
+        ? 'Remove this menu from bookmarks?'
+        : 'Add this menu to bookmarks?',
       [
         {
           text: 'No',
-          onPress: () => onToggleBookmark(false), // 북마크 해제
           style: 'cancel',
         },
         {
           text: 'Yes',
-          onPress: () => onToggleBookmark(true), // 북마크 설정
+
+          onPress: () => {
+            onToggleBookmark(!isBookmarked);
+          },
         },
       ],
       {cancelable: false},
@@ -133,6 +136,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       style={[
         styles.messageContainer,
         item.sentByUser ? styles.sentMessage : styles.receivedMessage,
+        hasMenuId && {paddingTop: 45}, // 북마크 아이콘이 있을 때만 paddingTop 적용
       ]}>
       {/* 이미지 렌더링 */}
       {item.imageUri && (
@@ -154,6 +158,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       )}
 
       {/* 북마크 아이콘 */}
+
       {hasMenuId && (
         <TouchableOpacity
           style={styles.bookmarkIcon}
@@ -210,6 +215,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flexShrink: 1,
     color: colors.BLACK,
+    // top: 45,
   },
   boldText: {
     fontWeight: 'bold',
@@ -239,7 +245,7 @@ const styles = StyleSheet.create({
   },
   bookmarkIcon: {
     position: 'absolute',
-    top: 5, // 상단 위치
+    //top: 5, // 상단 위치
     right: 5, // 오른쪽 위치
   },
 });

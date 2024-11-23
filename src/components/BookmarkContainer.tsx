@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import {colors} from '../constants';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -6,77 +6,88 @@ import Icon from 'react-native-vector-icons/Ionicons';
 interface BookmarkContainerProps {
   title: string;
   subtitle: string;
-  initialRating?: number;
-  onDelete: () => void;
+  star: number; // 별점
+  onDelete: () => void; // 북마크 삭제 핸들러
 }
 
 const BookmarkContainer: React.FC<BookmarkContainerProps> = ({
   title,
   subtitle,
-  initialRating = 0,
+  star,
+  onDelete,
 }) => {
-  const [rating, setRating] = useState(initialRating);
-
-  const handleRating = (newRating: number) => {
-    setRating(newRating);
+  // 별점 렌더링 함수
+  const renderStars = (star: number) => {
+    return [1, 2, 3, 4, 5].map(starIndex => (
+      <Icon
+        key={starIndex}
+        name={starIndex <= star ? 'star' : 'star-outline'}
+        size={20}
+        color={colors.ORANGE_800}
+        style={styles.starIcon}
+      />
+    ));
   };
 
   return (
-    <View style={styles.bookmarkContainer}>
+    <View style={styles.card}>
+      {/* 삭제 버튼: 상단 */}
+      <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+        <Icon name="trash-outline" size={22} color={colors.RED_500} />
+      </TouchableOpacity>
+
+      {/* 텍스트와 별점: 중앙 */}
       <View style={styles.contentContainer}>
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-        </View>
-        <View style={styles.ratingContainer}>
-          {[1, 2, 3, 4, 5].map(star => (
-            <TouchableOpacity
-              key={star}
-              onPress={() => handleRating(star)}
-              style={styles.starButton}>
-              <Icon
-                name={star <= rating ? 'star' : 'star-outline'}
-                size={20}
-                color={colors.ORANGE_800}
-              />
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
+        <View style={styles.ratingContainer}>{renderStars(star)}</View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  bookmarkContainer: {
+  card: {
     backgroundColor: colors.YELLOW_200,
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: {width: 0, height: 3},
+    shadowRadius: 5,
+
+    position: 'relative',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 8, // 버튼 클릭 영역 확대
   },
   contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  textContainer: {
-    marginBottom: 16,
-    flex: 1,
+    alignItems: 'center', // 텍스트와 별점을 중앙 정렬
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: colors.BLACK,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
+    color: colors.GRAY_700,
     fontStyle: 'italic',
+    marginBottom: 8,
   },
   ratingContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row', // 별점 수평 배치
+    justifyContent: 'center', // 중앙 정렬
+    marginTop: 8,
   },
-  starButton: {
-    marginHorizontal: 1, // Space between stars
+  starIcon: {
+    marginHorizontal: 2, // 별 사이 간격
   },
 });
 
