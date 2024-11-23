@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 const SettingsMainScreen = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
@@ -17,16 +17,19 @@ const SettingsMainScreen = ({navigation}: {navigation: any}) => {
       <TouchableOpacity
         style={styles.option}
         onPress={() => navigation.navigate('SettingsFirstScreen')}>
-        <MaterialIcons name="restaurant-menu" size={24} color="#FF5722" />
-        <Text style={styles.optionText}>Modify Dietary Preferences</Text>
+        <MaterialCommunityIcons
+          name="food-variant-off"
+          size={24}
+          color="#FF5722"
+        />
+        <Text style={styles.optionText}>Edit Dietary Restrictions</Text>
       </TouchableOpacity>
 
-      {/* General Settings */}
       <TouchableOpacity
         style={styles.option}
         onPress={() => navigation.navigate('GeneralSettings')}>
-        <MaterialIcons name="settings" size={24} color="#FF5722" />
-        <Text style={styles.optionText}>General Settings</Text>
+        <MaterialIcons name="logout" size={24} color="#FF5722" />
+        <Text style={styles.optionText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -48,13 +51,11 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
+    //backgroundColor: '#F9F9F9',
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   optionText: {

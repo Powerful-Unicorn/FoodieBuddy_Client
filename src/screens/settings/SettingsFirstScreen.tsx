@@ -133,19 +133,16 @@ function SettingsFirstScreen({navigation}: any) {
           ))
         )}
 
-        <View style={styles.navigationContainer}>
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.navBtn}
+            style={[styles.button, styles.backButton]}
             onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
+            <Text style={styles.buttonText}>Back</Text>
           </TouchableOpacity>
-          <Text style={styles.pageNumber}>1</Text>
-          <TouchableOpacity style={styles.navBtn} onPress={handleNext}>
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={colors.GRAY_700}
-            />
+          <TouchableOpacity
+            style={[styles.button, styles.nextButton]}
+            onPress={handleNext}>
+            <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -218,6 +215,30 @@ const styles = StyleSheet.create({
   pageNumber: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 30,
+  },
+  button: {
+    flex: 1,
+    height: 50,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  backButton: {
+    backgroundColor: colors.GRAY_700,
+  },
+  nextButton: {
+    backgroundColor: colors.ORANGE_800,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

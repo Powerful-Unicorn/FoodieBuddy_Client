@@ -141,7 +141,9 @@ function SettingsSecondScreen({navigation}: any) {
 
   const handleSelection = (option: string) => {
     const subOptions = subOptionsMap[option] || [];
-
+    const handleNext = () => {
+      navigation.navigate('SettingsMainScreen');
+    };
     // 부모 옵션 (SubOptions 존재)
     if (subOptions.length > 0) {
       if (selectedOptions.includes(option)) {
@@ -263,7 +265,9 @@ function SettingsSecondScreen({navigation}: any) {
       Alert.alert('Error', 'Failed to update your dietary preferences.');
     }
   };
-
+  const handleNext = () => {
+    navigation.navigate('SettingsMainScreen');
+  };
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -337,9 +341,18 @@ function SettingsSecondScreen({navigation}: any) {
             )}
           </View>
         ))}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.backButton]}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.buttonText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.nextButton]}
+            onPress={handleNext}>
+            <Text style={styles.buttonText}>Save Changes</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -395,15 +408,30 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
   },
-  buttonText: {color: '#fff', textAlign: 'center', fontWeight: 'bold'},
-  saveButton: {
-    backgroundColor: colors.ORANGE_800,
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 30,
   },
-  saveButtonText: {color: '#fff', fontSize: 16, fontWeight: 'bold'},
+  button: {
+    flex: 1,
+    height: 50,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  backButton: {
+    backgroundColor: colors.GRAY_700,
+  },
+  nextButton: {
+    backgroundColor: colors.ORANGE_800,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '600',
+  },
 });
 
 export default SettingsSecondScreen;
