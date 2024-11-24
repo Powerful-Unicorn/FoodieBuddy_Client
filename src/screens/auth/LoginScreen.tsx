@@ -35,7 +35,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
       const response = await api.post('/user/login', {email, password});
       const userId = response.data.userId;
       dispatch(setUserId(response.data.userId));
-      Alert.alert('', 'Login successful!');
+
       // 디버깅용 로그 추가
       console.log('[LoginScreen] Login successful. Received userId:', userId);
 

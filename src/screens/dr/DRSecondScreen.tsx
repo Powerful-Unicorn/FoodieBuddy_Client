@@ -218,25 +218,36 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
         headers: {'Content-Type': 'application/json'},
       });
       console.log('Response Data:', response.data);
-
       Alert.alert(
-        'Ingredients you cannot eat',
-        JSON.stringify(response.data, null, 2),
+        'Welcome Aboard! 🎉',
+        'Explore FoodieBuddy!',
         [
           {
-            text: 'Start Foodie Buddy',
+            text: 'OK',
             onPress: () => {
-              dispatch(login());
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{name: 'Onboarding'}],
-                }),
-              );
+              // Onboarding 화면으로 이동
+              navigation.navigate('Onboarding');
             },
           },
         ],
+        {cancelable: false}, // Alert를 닫기 위해 반드시 버튼을 누르게 함
       );
+      // 'Ingredients you cannot eat',
+      // JSON.stringify(response.data, null, 2),
+      // [
+      //   {
+      //     text: 'Start Foodie Buddy',
+      //     onPress: () => {
+      //       dispatch(login());
+      //       navigation.dispatch(
+      //         CommonActions.reset({
+      //           index: 0,
+      //           routes: [{name: 'Onboarding'}],
+      //         }),
+      //       );
+      //     },
+      //   },
+      // ],
     } catch (error) {
       console.error('Error occurred:', error);
       Alert.alert('Error', 'Failed to send data');
@@ -308,7 +319,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
                       <TouchableOpacity
                         style={styles.submitButton}
                         onPress={handleOtherSubmit}>
-                        <Text style={styles.buttonText}>Submit</Text>
+                        <Text style={styles.editSubmitButtonText}>Submit</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -317,7 +328,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
                       <TouchableOpacity
                         style={styles.editButton}
                         onPress={() => setIsEditingOther(true)}>
-                        <Text style={styles.buttonText}>Edit</Text>
+                        <Text style={styles.editSubmitButtonText}>Edit</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -325,19 +336,16 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
               )}
             </View>
           ))}
-          <View style={styles.navigationContainer}>
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.navBtn}
+              style={[styles.button, styles.backButton]}
               onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
+              <Text style={styles.buttonText}>Back</Text>
             </TouchableOpacity>
-            <Text style={styles.pageNumber}>2</Text>
-            <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color={colors.GRAY_700}
-              />
+            <TouchableOpacity
+              style={[styles.button, styles.nextButton]}
+              onPress={handleNextButton}>
+              <Text style={styles.buttonText}>Start</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -436,7 +444,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingVertical: 8,
     paddingHorizontal: 15,
-    width: 80,
+    width: 90,
   },
   editButton: {
     backgroundColor: colors.GRAY_700,
@@ -445,7 +453,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     width: 80,
   },
-  buttonText: {
+  editSubmitButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
@@ -462,9 +470,30 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginHorizontal: 10,
   },
-  pageNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+
+    marginTop: 30,
+  },
+  button: {
+    flex: 1,
+    height: 50,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  backButton: {
+    backgroundColor: colors.GRAY_700,
+  },
+  nextButton: {
+    backgroundColor: colors.ORANGE_800,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 
