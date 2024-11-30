@@ -145,7 +145,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
             <ActivityIndicator size="small" color={colors.GRAY_500} />
           )}
           {imageLoadError ? (
-            <Text style={styles.errorText}>이미지를 로드할 수 없습니다.</Text>
+            <Image
+              source={require('../../assets/nak.png')}
+              style={styles.image}
+            />
           ) : (
             <Image
               source={{uri: item.imageUri}}
