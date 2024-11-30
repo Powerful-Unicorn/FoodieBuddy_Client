@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   FlatList,
@@ -25,13 +25,6 @@ type MessageItemType = {
 const ChatScreen: React.FC<{route: any}> = ({route}) => {
   const userId = route.params?.userId;
 
-  // 디버깅용 로그 추가
-  React.useEffect(() => {
-    console.log('[ChatScreen] Loaded with userId:', userId);
-    if (!userId) {
-      console.warn('[ChatScreen] No userId received.');
-    }
-  }, [userId]);
   const dispatch = useDispatch();
   const {messages: websocketMessages} = useSelector(
     (state: RootState) => state.websocket,
@@ -40,16 +33,25 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // FlatList 참조 생성
+  const flatListRef = useRef<FlatList>(null);
+
   // 웹소켓에서 전달받은 메시지 상태를 동기화
   React.useEffect(() => {
     const updatedMessages = websocketMessages.map(message => ({
       ...message,
-      isBookmarked: false, //
+      isBookmarked: false,
     }));
     setMessages(updatedMessages);
   }, [websocketMessages]);
 
-  // 북마크 상태 토글 핸들러
+  // 메시지가 업데이트될 때 자동 스크롤
+  React.useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({animated: true});
+    }
+  }, [messages]);
+
   const toggleBookmark = (index: number, isBookmarked: boolean) => {
     setMessages(prevMessages =>
       prevMessages.map((message, i) =>
@@ -76,7 +78,6 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     },
   ];
 
-  // 웹소켓 연결 및 메시지 전송
   const {isConnected, sendMessage} = useWebSocket(
     currentUrl || '',
     (data: any) => {
@@ -87,9 +88,6 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
           : {text: '', sentByUser: false, isBookmarked: false};
 
       if (data.type === 'text') {
-        // 텍스트 메시지 수신
-        console.log('[ChatScreen] Received text message:', data.text);
-
         const textMessage: MessageItemType = {
           text: data.text,
           sentByUser: false,
@@ -97,7 +95,6 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
         };
         dispatch({type: 'WEBSOCKET_MESSAGE', payload: textMessage});
       } else if (data.type === 'image') {
-        // 이미지 메시지 수신
         const imageMessage: MessageItemType = {
           imageUri: data.imageUrl,
           sentByUser: false,
@@ -108,13 +105,11 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     },
   );
 
-  // 버튼 클릭 시 웹소켓 URL 설정
   const handleInstructionButtonPress = (apiUrl: string) => {
     setCurrentUrl(apiUrl);
     setLoading(true);
   };
 
-  // 메시지 전송 핸들러
   const handleSendMessage = (
     message: string,
     imageUri: string | null,
@@ -130,10 +125,8 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       text: message,
       imageUri: imageUri || undefined,
       sentByUser: true,
-      isBookmarked: false, // 초기 북마크 상태
+      isBookmarked: false,
     };
-
-    // Redu
 
     dispatch({
       type: 'WEBSOCKET_MESSAGE',
@@ -145,7 +138,6 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     }
   };
 
-  // 버튼 렌더링
   const renderButtons = () => (
     <View style={styles.buttonRow}>
       {buttons.map((button, index) => (
@@ -165,11 +157,11 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
 
   return (
     <View style={styles.container}>
-      {/* 안내 버튼 */}
       {showInstruction && renderButtons()}
 
-      {/* 메시지 목록 렌더링 */}
+      {/* 메시지 목록 */}
       <FlatList
+        ref={flatListRef} // FlatList 참조 연결
         data={messages}
         renderItem={({item, index}) => (
           <MessageItem
@@ -182,9 +174,11 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
         )}
         keyExtractor={(_, index) => index.toString()}
         contentContainerStyle={styles.flatListContent}
+        onContentSizeChange={() =>
+          flatListRef.current?.scrollToEnd({animated: true})
+        } // 크기 변경 시 스크롤
       />
 
-      {/* 로딩 표시 */}
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
@@ -192,7 +186,6 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
         </View>
       )}
 
-      {/* 메시지 입력 */}
       <MessageInput
         onSend={(message, imageUri, binaryData) =>
           handleSendMessage(message, imageUri, binaryData)
