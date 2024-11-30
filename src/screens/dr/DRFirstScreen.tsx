@@ -53,6 +53,10 @@ const dietaryOptions = [
     label: 'Pollotarian',
     icon: <MaterialCommunityIcons name="sprout" size={20} />,
   },
+  {
+    label: 'None above',
+    icon: <MaterialCommunityIcons name="alpha-x-circle-outline" size={24} />,
+  },
 ];
 
 function DRFirstScreen({navigation}: DRFirstScreenProps) {
@@ -154,13 +158,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   titleText: {
-    marginBottom: 15,
+    backgroundColor: colors.ORANGE_800,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    marginHorizontal: -20,
     fontSize: 25,
     fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#fff',
+    marginBottom: 15,
   },
   infoText: {
     fontSize: 20,
     marginBottom: 5,
+    textAlign: 'center',
   },
   optionWrapper: {
     backgroundColor: '#fff',

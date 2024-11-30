@@ -368,13 +368,20 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   titleText: {
-    marginBottom: 15,
+    backgroundColor: colors.ORANGE_800,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    marginHorizontal: -20,
     fontSize: 25,
     fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#fff',
+    marginBottom: 15,
   },
   infoText: {
     fontSize: 20,
     marginBottom: 5,
+    textAlign: 'center',
   },
   optionWrapper: {
     backgroundColor: '#fff',
