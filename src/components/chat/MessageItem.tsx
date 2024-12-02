@@ -100,7 +100,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         // #해시태그 처리
         return (
           <Text key={index} style={styles.hashtagText}>
-            {part}
+            {part}{' '}
           </Text>
         );
       } else {
