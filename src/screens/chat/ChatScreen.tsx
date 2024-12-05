@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   View,
   FlatList,
@@ -19,29 +19,62 @@ type MessageItemType = {
   text?: string;
   sentByUser: boolean;
   imageUri?: string;
+  isBookmarked?: boolean;
 };
 
 const ChatScreen: React.FC<{route: any}> = ({route}) => {
+  const userId = route.params?.userId;
+
   const dispatch = useDispatch();
-  const {messages} = useSelector((state: RootState) => state.websocket);
+  const {messages: websocketMessages} = useSelector(
+    (state: RootState) => state.websocket,
+  );
+  const [messages, setMessages] = useState<MessageItemType[]>([]); // 메시지 상태 관리
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // FlatList 참조 생성
+  const flatListRef = useRef<FlatList>(null);
+
+  // 웹소켓에서 전달받은 메시지 상태를 동기화
+  React.useEffect(() => {
+    const updatedMessages = websocketMessages.map(message => ({
+      ...message,
+      isBookmarked: false,
+    }));
+    setMessages(updatedMessages);
+  }, [websocketMessages]);
+
+  // 메시지가 업데이트될 때 자동 스크롤
+  React.useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({animated: true});
+    }
+  }, [messages]);
+
+  const toggleBookmark = (index: number, isBookmarked: boolean) => {
+    setMessages(prevMessages =>
+      prevMessages.map((message, i) =>
+        i === index ? {...message, isBookmarked} : message,
+      ),
+    );
+  };
 
   const buttons = [
     {
       icon: 'question-mark',
       text: 'Recommend Food',
-      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/recommendation',
+      apiUrl: `ws://api.foodiebuddy.kro.kr:8000/recommendation/${userId}`,
     },
     {
       icon: 'menu-book',
       text: 'Explain\nMenu Board',
-      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askmenu',
+      apiUrl: `ws://api.foodiebuddy.kro.kr:8000/askmenu/${userId}`,
     },
     {
       icon: 'egg-alt',
       text: 'Explain\nSide Dish',
-      apiUrl: 'ws://api.foodiebuddy.kro.kr:8000/askdish',
+      apiUrl: `ws://api.foodiebuddy.kro.kr:8000/askdish/${userId}`,
     },
   ];
 
@@ -51,9 +84,24 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       setLoading(false);
       const parsedMessage: MessageItemType =
         typeof data === 'string'
-          ? {text: data, sentByUser: false}
-          : {text: '', sentByUser: false};
-      dispatch({type: 'WEBSOCKET_MESSAGE', payload: parsedMessage});
+          ? {text: data, sentByUser: false, isBookmarked: false}
+          : {text: '', sentByUser: false, isBookmarked: false};
+
+      if (data.type === 'text') {
+        const textMessage: MessageItemType = {
+          text: data.text,
+          sentByUser: false,
+          isBookmarked: false,
+        };
+        dispatch({type: 'WEBSOCKET_MESSAGE', payload: textMessage});
+      } else if (data.type === 'image') {
+        const imageMessage: MessageItemType = {
+          imageUri: data.imageUrl,
+          sentByUser: false,
+          isBookmarked: false,
+        };
+        dispatch({type: 'WEBSOCKET_MESSAGE', payload: imageMessage});
+      }
     },
   );
 
@@ -77,6 +125,7 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       text: message,
       imageUri: imageUri || undefined,
       sentByUser: true,
+      isBookmarked: false,
     };
 
     dispatch({
@@ -108,15 +157,26 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
 
   return (
     <View style={styles.container}>
-      {!isConnected && <Text style={styles.statusText}>Connecting...</Text>}
-
       {showInstruction && renderButtons()}
 
+      {/* 메시지 목록 */}
       <FlatList
+        ref={flatListRef} // FlatList 참조 연결
         data={messages}
-        renderItem={({item}) => <MessageItem item={item} />}
+        renderItem={({item, index}) => (
+          <MessageItem
+            item={item}
+            isBookmarked={item.isBookmarked}
+            onToggleBookmark={isBookmarked =>
+              toggleBookmark(index, isBookmarked)
+            }
+          />
+        )}
         keyExtractor={(_, index) => index.toString()}
         contentContainerStyle={styles.flatListContent}
+        onContentSizeChange={() =>
+          flatListRef.current?.scrollToEnd({animated: true})
+        } // 크기 변경 시 스크롤
       />
 
       {loading && (

@@ -13,21 +13,14 @@ import {StackScreenProps} from '@react-navigation/stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import axios from 'axios';
 import {useSelector} from 'react-redux';
+import {RootStackParamList} from '../../navigations/root/RootNavigator';
 
-type DRFirstScreenProps = StackScreenProps<
-  AuthStackParamList,
-  typeof authNavigations.DRFIRST
->;
+type DRFirstScreenProps = StackScreenProps<RootStackParamList, 'DRFirst'>;
 
 const dietaryOptions = [
-  {
-    label: 'Halal',
-    icon: <MaterialCommunityIcons name="food-halal" size={20} />,
-  },
   {
     label: 'Hindu',
     icon: <MaterialIcons name="temple-hindu" size={20} />,
@@ -60,6 +53,10 @@ const dietaryOptions = [
     label: 'Pollotarian',
     icon: <MaterialCommunityIcons name="sprout" size={20} />,
   },
+  {
+    label: 'None above',
+    icon: <MaterialCommunityIcons name="alpha-x-circle-outline" size={24} />,
+  },
 ];
 
 function DRFirstScreen({navigation}: DRFirstScreenProps) {
@@ -86,7 +83,7 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
         headers: {'Content-Type': 'application/json'},
       });
 
-      navigation.navigate(authNavigations.DRSECOND, {
+      navigation.navigate('DRSecond', {
         selectedDR: selectedDR.join(', '),
         dietRestrictions: response.data,
       });
@@ -131,19 +128,16 @@ function DRFirstScreen({navigation}: DRFirstScreenProps) {
               </TouchableOpacity>
             </View>
           ))}
-          <View style={styles.navigationContainer}>
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.navBtn}
+              style={[styles.button, styles.backButton]}
               onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
+              <Text style={styles.buttonText}>Back</Text>
             </TouchableOpacity>
-            <Text style={styles.pageNumber}>1</Text>
-            <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color={colors.GRAY_700}
-              />
+            <TouchableOpacity
+              style={[styles.button, styles.nextButton]}
+              onPress={handleNextButton}>
+              <Text style={styles.buttonText}>Next</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -164,13 +158,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   titleText: {
-    marginBottom: 15,
+    backgroundColor: colors.ORANGE_800,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    marginHorizontal: -20,
     fontSize: 25,
     fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#fff',
+    marginBottom: 15,
   },
   infoText: {
     fontSize: 20,
     marginBottom: 5,
+    textAlign: 'center',
   },
   optionWrapper: {
     backgroundColor: '#fff',
@@ -206,9 +207,29 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginHorizontal: 10,
   },
-  pageNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 30,
+  },
+  button: {
+    flex: 1,
+    height: 50,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  backButton: {
+    backgroundColor: colors.GRAY_700,
+  },
+  nextButton: {
+    backgroundColor: colors.ORANGE_800,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

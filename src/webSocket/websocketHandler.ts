@@ -24,9 +24,17 @@ export function useWebSocket(
       setIsConnected(true);
       dispatch({type: WEBSOCKET_CONNECT});
     };
-
-    wsRef.current.onmessage = event => {
-      onMessageReceived(event.data);
+    wsRef.current.onmessage = async event => {
+      if (event.data instanceof Blob) {
+        // Blob 처리
+        const imageUrl = URL.createObjectURL(event.data); // Blob 데이터를 URL로 변환
+        onMessageReceived({type: 'image', imageUrl});
+      } else if (typeof event.data === 'string') {
+        // 텍스트 메시지 처리
+        onMessageReceived({type: 'text', text: event.data});
+      } else {
+        console.warn('Unsupported WebSocket data type:', typeof event.data);
+      }
     };
 
     wsRef.current.onclose = () => {

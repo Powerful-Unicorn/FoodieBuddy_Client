@@ -6,16 +6,18 @@ import useForm from '../../hooks/useForm';
 import {validateLogin} from '../../utils';
 import {authNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
-import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import axios from 'axios';
 import {useDispatch} from 'react-redux';
-import {setUserId} from '../../states/userSlice'; // Redux 액션 가져오기
+import {setUserId} from '../../states/userSlice';
+import {MainDrawerParamList} from '../../navigations/drawer/MainDrawerNavigator';
+import {RootStackParamList} from '../../navigations/root/RootNavigator';
+// type LoginScreenProps = StackScreenProps<
+//   AuthStackParamList,
+//   typeof authNavigations.LOGIN
+// >;
 
-type LoginScreenProps = StackScreenProps<
-  AuthStackParamList,
-  typeof authNavigations.LOGIN
->;
+type LoginScreenProps = StackScreenProps<RootStackParamList, 'Login'>;
 
 function LoginScreen({navigation}: LoginScreenProps) {
   const passwordRef = useRef<TextInput | null>(null);
@@ -24,43 +26,41 @@ function LoginScreen({navigation}: LoginScreenProps) {
     validate: validateLogin,
   });
 
-  const dispatch = useDispatch(); // Redux dispatch 함수 가져오기
+  const dispatch = useDispatch();
 
-  const handleSignup = async () => {
-    const requestBody = {
-      email: login.values.email,
-      password: login.values.password,
-    };
+  const handleLogin = async () => {
+    const {email, password} = login.values;
 
     try {
-      const response = await api.post('/user/signup', requestBody);
-      console.log('Response Data:', response.data);
-      dispatch(setUserId(response.data.userId)); // userId를 Redux 상태에 저장
-      Alert.alert(
-        '',
-        'Welcome to FoodieBuddy! \n Please select your dietary restrictions.',
-      );
-      navigation.navigate(authNavigations.DRFIRST);
+      const response = await api.post('/user/login', {email, password});
+      const userId = response.data.userId;
+      dispatch(setUserId(response.data.userId));
+
+      // 디버깅용 로그 추가
+      console.log('[LoginScreen] Login successful. Received userId:', userId);
+
+      // Redux에 userId 저장
+      dispatch(setUserId(userId));
+      // MainDrawerNavigator로 이동 (스택 초기화)
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'MainDrawerNavigator', params: {userId}}],
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response) {
-          console.log('Error:', error.response.data);
-          Alert.alert(
-            'Error',
-            error.response.data.message || 'Something went wrong',
-          );
-        } else {
-          Alert.alert('Error', 'Failed to sign up');
-        }
+        Alert.alert(
+          'Login Failed',
+          error.response?.data?.message || 'Invalid email or password',
+        );
       } else {
         Alert.alert('Error', 'An unexpected error occurred');
-        console.error('Unexpected error:', error);
       }
     }
   };
 
   const handleSubmit = () => {
-    handleSignup();
+    console.log('Submitted Values:', login.values); // 제출된 값 출력
+    handleLogin();
   };
 
   return (
@@ -83,7 +83,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
           error={login.errors.password}
           touched={login.touched.password}
           secureTextEntry
-          returnKeyType="join"
+          returnKeyType="done"
           onSubmitEditing={handleSubmit}
           {...login.getTextInputProps('password')}
         />

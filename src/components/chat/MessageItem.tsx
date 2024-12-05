@@ -1,7 +1,15 @@
 import React, {useState} from 'react';
-import {View, Text, Image, StyleSheet, ActivityIndicator} from 'react-native';
-import ChatbotInstruction from './ChatbotInstruction';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import {colors} from '../../constants';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface MessageItemProps {
   item: {
@@ -10,11 +18,41 @@ interface MessageItemProps {
     sentByUser?: boolean; // 사용자 메시지 여부 (선택적)
     buttons?: string[]; // 버튼 목록 (선택적)
   };
+  isBookmarked?: boolean; // 북마크 상태
+  onToggleBookmark: (bookmarked: boolean) => void; // 북마크 상태 변경 핸들러
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({item}) => {
+const MessageItem: React.FC<MessageItemProps> = ({
+  item,
+  isBookmarked = false, // 부모로부터 북마크 상태 전달받음
+  onToggleBookmark, // 부모로부터 북마크 상태 변경 핸들러 전달받음
+}) => {
   const [isImageLoading, setIsImageLoading] = useState(!!item.imageUri);
   const [imageLoadError, setImageLoadError] = useState(false);
+
+  // 북마크 클릭 핸들러
+  const handleBookmarkPress = () => {
+    Alert.alert(
+      '',
+      isBookmarked
+        ? 'Remove this menu from bookmarks?'
+        : 'Add this menu to bookmarks?',
+      [
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+
+          onPress: () => {
+            onToggleBookmark(!isBookmarked);
+          },
+        },
+      ],
+      {cancelable: false},
+    );
+  };
 
   const handleImageLoad = () => {
     setIsImageLoading(false);
@@ -25,69 +63,61 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
     setImageLoadError(true);
   };
 
+  // menu_id 확인 함수
+  const hasMenuId = item.text && item.text.trim().startsWith('{');
+
+  // 메시지에서 `{}` 제거
+  const sanitizeMessage = (message: string): string => {
+    return message.replace(/{.*?}/g, '').trim(); // `{}`와 내부 내용을 제거
+  };
+
   // 텍스트 메시지 파싱 (볼드체 및 해시태그 스타일 적용)
   const renderParsedMessage = (message: string) => {
-    const bulletRegex = /^- ?(.*)/gm; // - 뒤 공백 허용
-    const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g; // **(내용)** 또는 #해시태그 감지
+    const sanitizedMessage = sanitizeMessage(message);
 
-    // 텍스트 분리
-    const parts = message.split(
-      new RegExp(`${bulletRegex.source}|${boldAndHashtagRegex.source}`, 'g'),
-    );
+    // 정규식: **볼드체**와 #해시태그 추출
+    const boldAndHashtagRegex = /(\*\*(.*?)\*\*|#[^\s]+)/g;
 
-    // 볼드체 텍스트를 추출하여 중복 제거 준비
-    const boldTexts: string[] = [];
-    message.replace(boldAndHashtagRegex, (match, _, boldText) => {
-      if (boldText) boldTexts.push(boldText.trim());
-      return match;
+    // 렌더링된 텍스트 추적용 Set
+    const renderedTexts = new Set<string>();
+
+    const parts = sanitizedMessage
+      .split(boldAndHashtagRegex)
+      .filter(part => part);
+
+    return parts.map((part, index) => {
+      if (renderedTexts.has(part)) {
+        // 이미 렌더링된 텍스트는 건너뛰기
+        return null;
+      }
+
+      if (part.startsWith('#')) {
+        // 해시태그 처리
+        renderedTexts.add(part); // 해시태그 추가
+        return (
+          <Text key={index} style={styles.hashtagText}>
+            {part}{' '}
+          </Text>
+        );
+      } else if (part.startsWith('**') && part.endsWith('**')) {
+        // **볼드체** 처리
+        const content = part.slice(2, -2); // **를 제거
+        renderedTexts.add(content); // 볼드 텍스트 추가
+        return (
+          <Text key={index} style={styles.boldText}>
+            {content}
+          </Text>
+        );
+      } else {
+        // 일반 텍스트 처리
+        renderedTexts.add(part); // 일반 텍스트 추가
+        return (
+          <Text key={index} style={styles.normalText}>
+            {part}
+          </Text>
+        );
+      }
     });
-
-    return parts
-      .filter(part => part) // undefined 또는 빈 문자열 제거
-      .map((part, index) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.slice(2, -2).trim(); // ** 제거
-          return (
-            <Text key={index} style={styles.boldText}>
-              {content}
-            </Text>
-          );
-        } else if (part.startsWith('#')) {
-          return (
-            <Text key={index} style={styles.hashtagText}>
-              {part}
-            </Text>
-          );
-        } else if (part.startsWith('- ')) {
-          return (
-            <View key={index} style={styles.bulletContainer}>
-              <Text style={styles.bulletPoint}>•</Text>
-              <Text style={styles.bulletText}>{part.slice(2).trim()}</Text>
-            </View>
-          );
-        } else {
-          // 중복 제거: 볼드체 텍스트와 동일한 내용이면 제외
-          const isDuplicate = boldTexts.some(boldText =>
-            part.trim().startsWith(boldText),
-          );
-          if (isDuplicate) {
-            const cleanedText = boldTexts.reduce(
-              (text, boldText) => text.replace(boldText, '').trim(),
-              part.trim(),
-            );
-            return cleanedText ? (
-              <Text key={index} style={styles.normalText}>
-                {cleanedText}
-              </Text>
-            ) : null;
-          }
-          return (
-            <Text key={index} style={styles.normalText}>
-              {part.trim()}
-            </Text>
-          );
-        }
-      });
   };
 
   if (!item.text && !item.imageUri && !item.buttons?.length) {
@@ -99,6 +129,7 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
       style={[
         styles.messageContainer,
         item.sentByUser ? styles.sentMessage : styles.receivedMessage,
+        hasMenuId && {paddingTop: 45}, // 북마크 아이콘이 있을 때만 paddingTop 적용
       ]}>
       {/* 이미지 렌더링 */}
       {item.imageUri && (
@@ -107,7 +138,10 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
             <ActivityIndicator size="small" color={colors.GRAY_500} />
           )}
           {imageLoadError ? (
-            <Text style={styles.errorText}>이미지를 로드할 수 없습니다.</Text>
+            <Image
+              source={require('../../assets/nak.png')}
+              style={styles.image}
+            />
           ) : (
             <Image
               source={{uri: item.imageUri}}
@@ -119,15 +153,25 @@ const MessageItem: React.FC<MessageItemProps> = ({item}) => {
         </View>
       )}
 
-      {/* 텍스트 메시지 렌더링 */}
-      {item.text && (
-        <Text style={styles.messageText}>{renderParsedMessage(item.text)}</Text>
+      {/* 북마크 아이콘 */}
+
+      {hasMenuId && (
+        <TouchableOpacity
+          style={styles.bookmarkIcon}
+          onPress={handleBookmarkPress}
+          hitSlop={{top: 40, bottom: 40, left: 40, right: 40}}>
+          <Icon
+            name={isBookmarked ? 'bookmark' : 'bookmark-border'}
+            size={40}
+            color={isBookmarked ? colors.ORANGE_500 : colors.GRAY_500}
+          />
+        </TouchableOpacity>
       )}
 
-      {/* 버튼 렌더링 */}
-      {item.buttons && item.buttons.length > 0 && (
-        <ChatbotInstruction buttons={item.buttons} />
-      )}
+      {/* 메시지 텍스트 렌더링 */}
+      <Text style={styles.messageText}>
+        {renderParsedMessage(item.text || '')}
+      </Text>
     </View>
   );
 };
@@ -138,6 +182,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     maxWidth: '70%',
+    position: 'relative', // 북마크 아이콘 위치를 위한 설정
   },
   sentMessage: {
     backgroundColor: colors.YELLOW_200,
@@ -166,9 +211,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flexShrink: 1,
     color: colors.BLACK,
+    // top: 45,
   },
   boldText: {
-    fontWeight: 'bold', // 볼드체 스타일
+    fontWeight: 'bold',
     color: colors.BLACK,
   },
   normalText: {
@@ -176,7 +222,7 @@ const styles = StyleSheet.create({
     color: colors.BLACK,
   },
   hashtagText: {
-    color: colors.ORANGE_800, // 해시태그 색상 변경
+    color: colors.ORANGE_800,
     fontWeight: 'bold',
   },
   bulletContainer: {
@@ -190,8 +236,13 @@ const styles = StyleSheet.create({
     color: colors.BLACK,
   },
   bulletText: {
-    color: colors.BLACK, // 불릿 텍스트 색상
+    color: colors.BLACK,
     fontSize: 16,
+  },
+  bookmarkIcon: {
+    position: 'absolute',
+    //top: 5, // 상단 위치
+    right: 5, // 오른쪽 위치
   },
 });
 

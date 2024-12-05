@@ -8,6 +8,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // 아이콘 추가
 import ImageInput from './ImageInput';
 import {colors} from '../../constants';
 
@@ -38,15 +39,34 @@ const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
     setBinaryData(null);
   };
 
+  const handleCameraPress = () => {
+    console.log('Camera icon pressed');
+    // 카메라 실행 로직 추가 가능
+  };
+
   return (
     <View style={styles.container}>
-      <ImageInput
-        onChange={(uri, data) => {
-          setImageUri(uri);
-          setBinaryData(data);
-        }}
-      />
+      {/* 카메라 아이콘과 이미지 입력 버튼은 미리보기가 없을 때만 표시 */}
+      {!imageUri && (
+        <>
+          {/* 카메라 아이콘 */}
+          <TouchableOpacity
+            style={styles.cameraIcon}
+            onPress={handleCameraPress}>
+            <Icon name="camera-alt" size={30} color={colors.ORANGE_800} />
+          </TouchableOpacity>
 
+          {/* 이미지 입력 버튼 */}
+          <ImageInput
+            onChange={(uri, data) => {
+              setImageUri(uri);
+              setBinaryData(data);
+            }}
+          />
+        </>
+      )}
+
+      {/* 이미지 미리보기 */}
       {imageUri && (
         <View style={styles.previewContainer}>
           <Image source={{uri: imageUri}} style={styles.imagePreview} />
@@ -58,13 +78,14 @@ const MessageInput: React.FC<MessageInputProps> = ({onSend}) => {
         </View>
       )}
 
+      {/* 메시지 입력창 */}
       <TextInput
         style={styles.input}
         placeholder="Ask me anything"
-        //placeholderTextColor={colors.ORANGE_800}
         value={message}
         onChangeText={setMessage}
       />
+      {/* 전송 버튼 */}
       <Button title="Send" onPress={handleSend} color="#F27059" />
     </View>
   );
@@ -76,6 +97,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
     marginTop: 10,
+  },
+  cameraIcon: {
+    marginLeft: 10,
+    marginRight: 10,
   },
   previewContainer: {
     position: 'relative',

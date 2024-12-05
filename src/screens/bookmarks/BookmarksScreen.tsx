@@ -1,79 +1,113 @@
-import React, {useState} from 'react';
-import {StyleSheet, SafeAreaView, View, Text, Alert} from 'react-native';
-import {SwipeListView} from 'react-native-swipe-list-view';
+import React, {useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  SafeAreaView,
+  View,
+  Text,
+  Alert,
+  ActivityIndicator,
+  FlatList,
+} from 'react-native';
 import BookmarkContainer from '../../components/BookmarkContainer';
-import {RectButton} from 'react-native-gesture-handler';
 import {colors} from '../../constants';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../states/store';
+import api from '../../apis/api';
 
-// Define the type for a bookmark item
 interface Bookmark {
-  id: string;
-  title: string;
-  subtitle: string;
-  rating: number;
+  menuId: number;
+  isBookmarked: boolean;
+  name: string;
+  pronunciation: string;
+  star: number;
 }
 
 const BookmarksScreen = () => {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([
-    {id: '1', title: 'Bean Sprout Soup', subtitle: 'Kongnamulguk', rating: 0},
-    {id: '2', title: 'Grilled Pork Belly', subtitle: 'Samgyeopsal', rating: 0},
-    {id: '3', title: 'Dumpling Soup', subtitle: 'Mandutguk', rating: 0},
-    {id: '4', title: 'Dumpling Soup', subtitle: 'Mandutguk', rating: 0},
-  ]);
+  const userId = useSelector((state: RootState) => state.user.userId);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const deleteBookmark = (id: string) => {
-    Alert.alert(
-      '', // Empty string for the title
-      'Are you sure you want to delete this bookmark?', // Message
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
+  // 북마크 데이터 가져오기
+  const fetchBookmarks = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/menu/${userId}`);
+      setBookmarks(response.data);
+    } catch (error) {
+      console.error('Failed to fetch bookmarks:', error);
+      Alert.alert('Error', 'Failed to load bookmarks.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 북마크 삭제
+  const deleteBookmark = (menuId: number) => {
+    Alert.alert('', 'Are you sure you want to delete this bookmark?', [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Delete',
+        onPress: () => {
+          setBookmarks(prevBookmarks =>
+            prevBookmarks.filter(bookmark => bookmark.menuId !== menuId),
+          );
         },
-        {
-          text: 'Delete',
-          onPress: () => {
-            setBookmarks(prevBookmarks =>
-              prevBookmarks.filter(bookmark => bookmark.id !== id),
-            );
-          },
-          style: 'destructive',
-        },
-      ],
-      {cancelable: true},
+        style: 'destructive',
+      },
+    ]);
+  };
+
+  // 별점 업데이트
+  const updateStarRating = (menuId: number, newRating: number) => {
+    setBookmarks(prevBookmarks =>
+      prevBookmarks.map(bookmark =>
+        bookmark.menuId === menuId
+          ? {...bookmark, star: newRating} // 별점 수정
+          : bookmark,
+      ),
     );
   };
 
+  useEffect(() => {
+    if (userId) {
+      fetchBookmarks();
+    }
+  }, [userId]);
+
+  // FlatList의 렌더링 아이템
   const renderItem = ({item}: {item: Bookmark}) => (
     <BookmarkContainer
-      title={item.title}
-      subtitle={item.subtitle}
-      initialRating={item.rating}
-      onDelete={() => deleteBookmark(item.id)}
+      title={item.name}
+      subtitle={item.pronunciation}
+      star={item.star}
+      onDelete={() => deleteBookmark(item.menuId)} // 삭제 핸들러
+      onStarPress={
+        (rating: number) => updateStarRating(item.menuId, rating) // 별점 핸들러
+      }
     />
-  );
-
-  const renderHiddenItem = ({item}: {item: Bookmark}) => (
-    <View style={styles.rowBack}>
-      <RectButton
-        style={styles.deleteButton}
-        onPress={() => deleteBookmark(item.id)}>
-        <Text style={styles.deleteText}>Delete</Text>
-      </RectButton>
-    </View>
   );
 
   return (
     <View style={styles.wrapper}>
-      <SafeAreaView style={styles.container}>
-        <SwipeListView
-          data={bookmarks}
-          renderItem={renderItem}
-          renderHiddenItem={renderHiddenItem}
-          rightOpenValue={-75} // Adjust the swipe distance as needed
-          keyExtractor={item => item.id}
-        />
-      </SafeAreaView>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.GRAY_500} />
+          <Text style={styles.loadingText}>Loading bookmarks...</Text>
+        </View>
+      ) : bookmarks.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No bookmarks found.</Text>
+        </View>
+      ) : (
+        <SafeAreaView style={styles.container}>
+          <FlatList
+            data={bookmarks}
+            renderItem={renderItem}
+            keyExtractor={item => item.menuId.toString()}
+            contentContainerStyle={{paddingBottom: 20}} // 여백 추가
+          />
+        </SafeAreaView>
+      )}
     </View>
   );
 };
@@ -85,29 +119,26 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    //backgroundColor: colors.WHITE,
-    margin: 30,
+    margin: 20,
   },
-  rowBack: {
-    alignItems: 'center',
-    height: 105, // Height adjusted to match BookmarkContainer
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    //paddingRight: 15,
-    borderRadius: 8,
-  },
-  deleteButton: {
-    alignItems: 'center',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'red',
-    width: 75,
-    height: '100%', // 부모의 높이에 맞게 설정
-    borderRadius: 8,
+    alignItems: 'center',
   },
-  deleteText: {
-    color: 'white',
-    fontWeight: 'bold',
+  loadingText: {
+    marginTop: 10,
     fontSize: 16,
+    color: colors.GRAY_500,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 18,
+    color: colors.GRAY_500,
   },
 });
 

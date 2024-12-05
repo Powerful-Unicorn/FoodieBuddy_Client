@@ -16,17 +16,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import {authNavigations, colors, mainNavigations} from '../../constants';
 import {StackScreenProps} from '@react-navigation/stack';
-import {AuthStackParamList} from '../../navigations/stack/AuthStackNavigator';
 import api from '../../apis/api';
 import {useSelector} from 'react-redux';
 import {CommonActions} from '@react-navigation/native';
 import {login} from '../../states/authSlice';
 import {useDispatch} from 'react-redux';
+import {RootStackParamList} from '../../navigations/root/RootNavigator';
 
-type DRSecondScreenProps = StackScreenProps<
-  AuthStackParamList,
-  typeof authNavigations.DRSECOND
->;
+type DRSecondScreenProps = StackScreenProps<RootStackParamList, 'DRSecond'>;
 
 const ingredientOptions = [
   {
@@ -121,27 +118,31 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
 
     if (subOptions.length > 0) {
       if (selectedOptions.includes(option)) {
+        // 상위 옵션 해제: 하위 옵션도 모두 제거
         setSelectedOptions(
           selectedOptions.filter(
-            item => ![option, ...subOptions].includes(item),
+            item => item !== option && !subOptions.includes(item),
           ),
         );
         setShowSubOptions({...showSubOptions, [option]: false});
       } else {
+        // 상위 옵션 선택: 하위 옵션도 모두 추가
         setSelectedOptions([...selectedOptions, option, ...subOptions]);
         setShowSubOptions({...showSubOptions, [option]: true});
       }
     } else if (option === 'Other') {
+      // Other 옵션 처리
       if (selectedOptions.includes('Other')) {
         setSelectedOptions(selectedOptions.filter(item => item !== 'Other'));
         setShowOtherInput(false);
         setOtherText('');
       } else {
-        setSelectedOptions([...selectedOptions, option]);
+        setSelectedOptions([...selectedOptions, 'Other']);
         setShowOtherInput(true);
         setIsEditingOther(true);
       }
     } else {
+      // 일반 옵션 처리
       if (selectedOptions.includes(option)) {
         setSelectedOptions(selectedOptions.filter(item => item !== option));
       } else {
@@ -164,37 +165,41 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
   const createRequestBody = () => {
     const body: any = {
       meat: selectedOptions.includes('Meat')
-        ? dietRestrictions.meat === 'all kinds'
-          ? 'all kinds'
-          : selectedOptions
-              .filter(item => subOptionsMap['Meat'].includes(item))
-              .join(', ')
+        ? selectedOptions
+            .filter(item => subOptionsMap['Meat'].includes(item)) // Meat 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
+            .join(', ')
         : '',
       egg: selectedOptions.includes('Egg'),
       dairy: selectedOptions.includes('Dairy')
         ? selectedOptions
-            .filter(item => subOptionsMap['Dairy'].includes(item))
+            .filter(item => subOptionsMap['Dairy'].includes(item)) // Dairy 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       seafood: selectedOptions.includes('Seafood')
         ? selectedOptions
-            .filter(item => subOptionsMap['Seafood'].includes(item))
+            .filter(item => subOptionsMap['Seafood'].includes(item)) // Seafood 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       nut: selectedOptions.includes('Nuts')
         ? selectedOptions
-            .filter(item => subOptionsMap['Nuts'].includes(item))
+            .filter(item => subOptionsMap['Nuts'].includes(item)) // Nuts 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       gluten: selectedOptions.includes('Gluten'),
-      fruit: selectedOptions.includes('Fruits')
+      fruit: selectedOptions.includes('Fruits') // API에서 fruit 사용
         ? selectedOptions
-            .filter(item => subOptionsMap['Fruits'].includes(item))
+            .filter(item => subOptionsMap['Fruits'].includes(item)) // Fruits 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
-      vegetable: selectedOptions.includes('Vegetables')
+      vegetable: selectedOptions.includes('Vegetables') // API에서 vegetable 사용
         ? selectedOptions
-            .filter(item => subOptionsMap['Vegetables'].includes(item))
+            .filter(item => subOptionsMap['Vegetables'].includes(item)) // Vegetables 하위 항목 필터링
+            .map(item => item.toLowerCase()) // 소문자로 변환
             .join(', ')
         : '',
       other: otherText,
@@ -213,25 +218,36 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
         headers: {'Content-Type': 'application/json'},
       });
       console.log('Response Data:', response.data);
-
       Alert.alert(
-        'Ingredients you cannot eat',
-        JSON.stringify(response.data, null, 2),
+        'Welcome Aboard! 🎉',
+        'Explore FoodieBuddy!',
         [
           {
-            text: 'Start Foodie Buddy',
+            text: 'OK',
             onPress: () => {
-              dispatch(login());
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{name: 'MainDrawer'}],
-                }),
-              );
+              // Onboarding 화면으로 이동
+              navigation.navigate('Onboarding');
             },
           },
         ],
+        {cancelable: false}, // Alert를 닫기 위해 반드시 버튼을 누르게 함
       );
+      // 'Ingredients you cannot eat',
+      // JSON.stringify(response.data, null, 2),
+      // [
+      //   {
+      //     text: 'Start Foodie Buddy',
+      //     onPress: () => {
+      //       dispatch(login());
+      //       navigation.dispatch(
+      //         CommonActions.reset({
+      //           index: 0,
+      //           routes: [{name: 'Onboarding'}],
+      //         }),
+      //       );
+      //     },
+      //   },
+      // ],
     } catch (error) {
       console.error('Error occurred:', error);
       Alert.alert('Error', 'Failed to send data');
@@ -303,7 +319,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
                       <TouchableOpacity
                         style={styles.submitButton}
                         onPress={handleOtherSubmit}>
-                        <Text style={styles.buttonText}>Submit</Text>
+                        <Text style={styles.editSubmitButtonText}>Submit</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -312,7 +328,7 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
                       <TouchableOpacity
                         style={styles.editButton}
                         onPress={() => setIsEditingOther(true)}>
-                        <Text style={styles.buttonText}>Edit</Text>
+                        <Text style={styles.editSubmitButtonText}>Edit</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -320,19 +336,16 @@ function DRSecondScreen({navigation, route}: DRSecondScreenProps) {
               )}
             </View>
           ))}
-          <View style={styles.navigationContainer}>
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.navBtn}
+              style={[styles.button, styles.backButton]}
               onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={colors.GRAY_700} />
+              <Text style={styles.buttonText}>Back</Text>
             </TouchableOpacity>
-            <Text style={styles.pageNumber}>2</Text>
-            <TouchableOpacity style={styles.navBtn} onPress={handleNextButton}>
-              <Ionicons
-                name="chevron-forward"
-                size={24}
-                color={colors.GRAY_700}
-              />
+            <TouchableOpacity
+              style={[styles.button, styles.nextButton]}
+              onPress={handleNextButton}>
+              <Text style={styles.buttonText}>Start</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -355,13 +368,20 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   titleText: {
-    marginBottom: 15,
+    backgroundColor: colors.ORANGE_800,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    marginHorizontal: -20,
     fontSize: 25,
     fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#fff',
+    marginBottom: 15,
   },
   infoText: {
     fontSize: 20,
     marginBottom: 5,
+    textAlign: 'center',
   },
   optionWrapper: {
     backgroundColor: '#fff',
@@ -431,7 +451,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingVertical: 8,
     paddingHorizontal: 15,
-    width: 80,
+    width: 90,
   },
   editButton: {
     backgroundColor: colors.GRAY_700,
@@ -440,7 +460,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     width: 80,
   },
-  buttonText: {
+  editSubmitButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
@@ -457,9 +477,30 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginHorizontal: 10,
   },
-  pageNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+
+    marginTop: 30,
+  },
+  button: {
+    flex: 1,
+    height: 50,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  backButton: {
+    backgroundColor: colors.GRAY_700,
+  },
+  nextButton: {
+    backgroundColor: colors.ORANGE_800,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

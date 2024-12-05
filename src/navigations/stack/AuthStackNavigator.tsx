@@ -3,33 +3,13 @@ import React from 'react';
 import {StyleSheet} from 'react-native';
 import OnboardingScreen from '../../screens/auth/OnboardingScreen';
 import LoginScreen from '../../screens/auth/LoginScreen';
-import {authNavigations, colors} from '../../constants';
 import SignupScreen from '../../screens/auth/SignupScreen';
 import DRFirstScreen from '../../screens/dr/DRFirstScreen';
 import DRSecondScreen from '../../screens/dr/DRSecondScreen';
+import {RootStackParamList} from '../root/RootNavigator';
+import {StackScreenProps} from '@react-navigation/stack';
 
-export type AuthStackParamList = {
-  [authNavigations.ONBOARDING]: undefined;
-  [authNavigations.LOGIN]: undefined;
-  [authNavigations.SIGNUP]: undefined;
-  [authNavigations.DRFIRST]: undefined;
-  [authNavigations.DRSECOND]: {
-    selectedDR: string;
-    dietRestrictions: {
-      meat: string;
-      egg: boolean;
-      dairy: string;
-      seafood: string;
-      nuts: string;
-      gluten: boolean;
-      fruit: string;
-      vegetable: string;
-      other: string;
-    };
-  };
-};
-
-const Stack = createStackNavigator<AuthStackParamList>();
+const Stack = createStackNavigator<RootStackParamList>();
 
 function AuthStackNavigator() {
   return (
@@ -39,25 +19,23 @@ function AuthStackNavigator() {
         headerStyle: {shadowColor: 'white'},
       }}>
       <Stack.Screen
-        name={authNavigations.ONBOARDING}
+        name="Onboarding"
         component={OnboardingScreen}
         options={{headerTitle: '', headerShown: false}}
       />
-      <Stack.Screen name={authNavigations.LOGIN} component={LoginScreen} />
-      <Stack.Screen name={authNavigations.SIGNUP} component={SignupScreen} />
+
+      <Stack.Screen name="Login" component={LoginScreen} />
+
+      <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen
-        name={authNavigations.DRFIRST}
+        name="DRFirst"
         component={DRFirstScreen}
-        options={{
-          headerShown: false, // 헤더 비활성화
-        }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
-        name={authNavigations.DRSECOND}
+        name="DRSecond"
         component={DRSecondScreen}
-        options={{
-          headerShown: false, // 헤더 비활성화
-        }}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   );

@@ -29,12 +29,18 @@ export const connectWebSocket = (
     websocket.onmessage = event => {
       const data = event.data;
 
-      // 메시지 유형에 따라 처리
+      console.log('[WebSocket] Received data:', data); // 데이터 로깅
+      console.log('[WebSocket] Data type:', typeof data);
+
+      // 메시지 유형에 따라 MessageItem 생성
       const message: MessageItem =
         typeof data === 'string'
-          ? {text: data, sentByUser: false} // 문자열 메시지
-          : {imageUri: URL.createObjectURL(data), sentByUser: false}; // 바이너리 메시지
+          ? {text: data, sentByUser: false} // 텍스트 메시지
+          : {imageUri: URL.createObjectURL(data), sentByUser: false}; // 이미지 메시지
 
+      console.log('[WebSocket] MessageItem created:', message);
+
+      // Redux에 메시지 디스패치
       dispatch({type: WEBSOCKET_MESSAGE, payload: message});
     };
 
