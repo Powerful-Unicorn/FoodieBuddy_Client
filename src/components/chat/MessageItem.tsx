@@ -137,19 +137,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
           {isImageLoading && (
             <ActivityIndicator size="small" color={colors.GRAY_500} />
           )}
-          {imageLoadError ? (
-            <Image
-              source={require('../../assets/nak.png')}
-              style={styles.image}
-            />
-          ) : (
-            <Image
-              source={{uri: item.imageUri}}
-              style={styles.image}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-          )}
+
+          <Image
+            source={{uri: item.imageUri}}
+            style={styles.image}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
         </View>
       )}
 
