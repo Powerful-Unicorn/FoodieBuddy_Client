@@ -58,14 +58,39 @@ const BookmarksScreen = () => {
   };
 
   // 별점 업데이트
-  const updateStarRating = (menuId: number, newRating: number) => {
+  const updateStarRating = async (menuId: number, newRating: number) => {
+    // UI 상태를 먼저 업데이트
     setBookmarks(prevBookmarks =>
       prevBookmarks.map(bookmark =>
-        bookmark.menuId === menuId
-          ? {...bookmark, star: newRating} // 별점 수정
-          : bookmark,
+        bookmark.menuId === menuId ? {...bookmark, star: newRating} : bookmark,
       ),
     );
+
+    try {
+      // 서버로 별점 업데이트 요청
+      const response = await api.patch(`/menu/star/${userId}`, {
+        menuId,
+        star: newRating,
+      });
+
+      // 서버 응답 확인
+      if (response.data.star !== newRating) {
+        throw new Error('Star rating mismatch');
+      }
+
+      console.log('Star rating updated successfully:', response.data);
+    } catch (error) {
+      console.error('Failed to update star rating:', error);
+
+      // 실패 시 이전 상태로 복구
+      setBookmarks(prevBookmarks =>
+        prevBookmarks.map(bookmark =>
+          bookmark.menuId === menuId ? {...bookmark, star: 0} : bookmark,
+        ),
+      );
+
+      Alert.alert('Error', 'Failed to update star rating.');
+    }
   };
 
   // 화면에 진입할 때마다 북마크 새로고침
