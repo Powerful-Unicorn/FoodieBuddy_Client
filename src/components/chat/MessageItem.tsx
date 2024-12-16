@@ -10,31 +10,51 @@ import {
 } from 'react-native';
 import {colors} from '../../constants';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import axios from 'axios';
+import api from '../../apis/api';
 
 interface MessageItemProps {
   item: {
-    text?: string; // 텍스트 메시지 (선택적)
-    imageUri?: string; // 이미지 URI (선택적)
-    sentByUser?: boolean; // 사용자 메시지 여부 (선택적)
-    buttons?: string[]; // 버튼 목록 (선택적)
+    text?: string; // 텍스트 메시지
+    imageUri?: string; // 이미지 URI
+    sentByUser?: boolean; // 사용자 메시지 여부
+    buttons?: string[]; // 버튼 목록
+    //menuId?: number; // 메뉴 ID 추가
   };
   isBookmarked?: boolean; // 북마크 상태
   onToggleBookmark: (bookmarked: boolean) => void; // 북마크 상태 변경 핸들러
+  userId: number; // 사용자 ID 추가
 }
-
+const getMenuIdFromText = (text: string): number | null => {
+  const match = text.match(/menu_id'\s*:\s*(\d+)/); // 정규식으로 숫자만 추출
+  return match ? parseInt(match[1], 10) : null; // 숫자로 변환 후 반환
+};
 const MessageItem: React.FC<MessageItemProps> = ({
   item,
   isBookmarked = false, // 부모로부터 북마크 상태 전달받음
   onToggleBookmark, // 부모로부터 북마크 상태 변경 핸들러 전달받음
+  userId,
 }) => {
   const [isImageLoading, setIsImageLoading] = useState(!!item.imageUri);
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState(false);
+  const [isBookmarkedUI, setIsBookmarkedUI] = useState(isBookmarked);
+
+  // menuId를 텍스트에서 추출
+  const menuIdNum = item.text ? getMenuIdFromText(item.text) : null;
+
+  console.log('Extracted menuId:', menuIdNum); // 디버깅용 로그
 
   // 북마크 클릭 핸들러
   const handleBookmarkPress = () => {
+    if (!menuIdNum) {
+      Alert.alert('Error', 'Invalid menu ID.');
+      return;
+    }
+
     Alert.alert(
       '',
-      isBookmarked
+      isBookmarkedUI
         ? 'Remove this menu from bookmarks?'
         : 'Add this menu to bookmarks?',
       [
@@ -44,9 +64,29 @@ const MessageItem: React.FC<MessageItemProps> = ({
         },
         {
           text: 'Yes',
+          onPress: async () => {
+            const newBookmarkState = !isBookmarkedUI;
+            setIsBookmarkedUI(newBookmarkState);
+            setIsApiLoading(true);
 
-          onPress: () => {
-            onToggleBookmark(!isBookmarked);
+            try {
+              // API 호출
+              const response = await api.patch(`/menu/bookmark/${userId}`, {
+                menuId: menuIdNum, // 추출된 menuId 사용
+              });
+
+              if (response.data.isBookmarked !== newBookmarkState) {
+                throw new Error('Bookmark state mismatch');
+              }
+
+              onToggleBookmark(response.data.isBookmarked);
+            } catch (error) {
+              console.error('Bookmark update failed:', error);
+              Alert.alert('Error', 'Failed to update bookmark.');
+              setIsBookmarkedUI(!newBookmarkState); // 실패 시 원래 상태로 복구
+            } finally {
+              setIsApiLoading(false);
+            }
           },
         },
       ],
@@ -84,6 +124,22 @@ const MessageItem: React.FC<MessageItemProps> = ({
     const parts = sanitizedMessage
       .split(boldAndHashtagRegex)
       .filter(part => part);
+    const getMenuIdFromText = (text: string): number | null => {
+      try {
+        // JSON 형식일 경우, JSON 파싱 시도
+        const parsed = JSON.parse(text);
+        if (parsed.menu_id) {
+          return parsed.menu_id;
+        }
+      } catch (error) {
+        // JSON 파싱 실패 시 정규식으로 숫자 추출
+        const match = text.match(/"menu_id"\s*:\s*(\d+)/);
+        if (match && match[1]) {
+          return parseInt(match[1], 10); // 숫자만 반환
+        }
+      }
+      return null; // menu_id가 없을 경우
+    };
 
     return parts.map((part, index) => {
       if (renderedTexts.has(part)) {
@@ -137,19 +193,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
           {isImageLoading && (
             <ActivityIndicator size="small" color={colors.GRAY_500} />
           )}
-          {imageLoadError ? (
-            <Image
-              source={require('../../assets/nak.png')}
-              style={styles.image}
-            />
-          ) : (
-            <Image
-              source={{uri: item.imageUri}}
-              style={styles.image}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-          )}
+
+          <Image
+            source={{uri: item.imageUri}}
+            style={styles.image}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
         </View>
       )}
 
@@ -159,12 +209,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <TouchableOpacity
           style={styles.bookmarkIcon}
           onPress={handleBookmarkPress}
+          disabled={isApiLoading}
           hitSlop={{top: 40, bottom: 40, left: 40, right: 40}}>
-          <Icon
-            name={isBookmarked ? 'bookmark' : 'bookmark-border'}
-            size={40}
-            color={isBookmarked ? colors.ORANGE_500 : colors.GRAY_500}
-          />
+          {isApiLoading ? (
+            <ActivityIndicator size="small" color={colors.GRAY_500} />
+          ) : (
+            <Icon
+              name={isBookmarkedUI ? 'bookmark' : 'bookmark-border'}
+              size={40}
+              color={isBookmarkedUI ? colors.ORANGE_500 : colors.GRAY_500}
+            />
+          )}
         </TouchableOpacity>
       )}
 

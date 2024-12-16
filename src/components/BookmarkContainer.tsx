@@ -37,9 +37,9 @@ const BookmarkContainer: React.FC<BookmarkContainerProps> = ({
   return (
     <View style={styles.card}>
       {/* 삭제 버튼 */}
-      <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+      {/* <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
         <Icon name="trash-outline" size={22} color={colors.RED_500} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* 제목, 설명, 별점 */}
       <View style={styles.contentContainer}>
