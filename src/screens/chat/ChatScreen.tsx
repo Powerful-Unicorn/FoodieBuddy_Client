@@ -51,7 +51,15 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       flatListRef.current.scrollToEnd({animated: true});
     }
   }, [messages]);
-
+  const logMessage = (
+    direction: 'sent' | 'received',
+    message: MessageItemType,
+  ) => {
+    console.log(
+      `[${direction === 'sent' ? 'SENT' : 'RECEIVED'} MESSAGE]:`,
+      message,
+    );
+  };
   const toggleBookmark = (index: number, isBookmarked: boolean) => {
     setMessages(prevMessages =>
       prevMessages.map((message, i) =>
@@ -82,11 +90,11 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
     currentUrl || '',
     (data: any) => {
       setLoading(false);
-      const parsedMessage: MessageItemType =
+      const receivedMessage: MessageItemType =
         typeof data === 'string'
           ? {text: data, sentByUser: false, isBookmarked: false}
           : {text: '', sentByUser: false, isBookmarked: false};
-
+      logMessage('received', receivedMessage);
       if (data.type === 'text') {
         const textMessage: MessageItemType = {
           text: data.text,
@@ -126,7 +134,8 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
       imageUri: imageUri || undefined,
       sentByUser: true,
       isBookmarked: false,
-    };
+    }; // 전송 메시지 로깅
+    logMessage('sent', payload);
 
     dispatch({
       type: 'WEBSOCKET_MESSAGE',
@@ -166,6 +175,7 @@ const ChatScreen: React.FC<{route: any}> = ({route}) => {
         renderItem={({item, index}) => (
           <MessageItem
             item={item}
+            userId={userId}
             isBookmarked={item.isBookmarked}
             onToggleBookmark={isBookmarked =>
               toggleBookmark(index, isBookmarked)

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   StyleSheet,
   SafeAreaView,
@@ -13,7 +13,7 @@ import {colors} from '../../constants';
 import {useSelector} from 'react-redux';
 import {RootState} from '../../states/store';
 import api from '../../apis/api';
-
+import {useFocusEffect} from '@react-navigation/native';
 interface Bookmark {
   menuId: number;
   isBookmarked: boolean;
@@ -68,11 +68,14 @@ const BookmarksScreen = () => {
     );
   };
 
-  useEffect(() => {
-    if (userId) {
-      fetchBookmarks();
-    }
-  }, [userId]);
+  // 화면에 진입할 때마다 북마크 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      if (userId) {
+        fetchBookmarks();
+      }
+    }, [userId]),
+  );
 
   // FlatList의 렌더링 아이템
   const renderItem = ({item}: {item: Bookmark}) => (
