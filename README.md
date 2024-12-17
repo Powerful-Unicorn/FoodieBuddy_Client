@@ -116,8 +116,6 @@ yarn install
 <p class="has-line-data" data-line-start="140" data-line-end="141">React Native에 대해 더 알아보려면 다음 리소스를 참고하세요:</p>
 <ul>
 <li class="has-line-data" data-line-start="142" data-line-end="143"><a href="https://reactnative.dev/">React Native 공식 웹사이트</a></li>
-<li class="has-line-data" data-line-start="143" data-line-end="144">Getting Started</li>
-<li class="has-line-data" data-line-start="144" data-line-end="145">React Native 블로그</li>
 <li class="has-line-data" data-line-start="145" data-line-end="147"><a href="https://github.com/facebook/react-native">@facebook/react-native GitHub Repository</a></li>
 </ul>
 <h2 class="code-line" data-line-start=147 data-line-end=148 ><a id=" 4_How_to_test_147"></a>🎮 4. How to test</h2>
